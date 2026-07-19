@@ -171,9 +171,8 @@ export default function AdminPage() {
     setActionSuccess("");
 
     try {
-      // Choice ID as sanitized name
-      const choiceId = newChoiceName.trim().toLowerCase().replace(/\s+/g, "-");
-      const choiceRef = doc(db, "choices", choiceId);
+      // Use auto-generated document ID to prevent slash/special character path errors
+      const choiceRef = doc(collection(db, "choices"));
       await setDoc(choiceRef, {
         name: newChoiceName.trim(),
         createdByAdmin: adminUsername,

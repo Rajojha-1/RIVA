@@ -145,8 +145,8 @@ export default function SuperadminPage() {
     setActionSuccess("");
 
     try {
-      const branchId = newBranchName.trim().toLowerCase().replace(/\s+/g, "-");
-      const branchRef = doc(db, "branches", branchId);
+      // Use auto-generated document ID to prevent path separator errors
+      const branchRef = doc(collection(db, "branches"));
       await setDoc(branchRef, { name: newBranchName.trim() });
       setNewBranchName("");
       setActionSuccess(`Branch "${newBranchName}" added successfully.`);
