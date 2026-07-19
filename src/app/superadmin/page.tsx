@@ -157,6 +157,14 @@ export default function SuperadminPage() {
   };
 
   const handleDeleteBranch = async (branchId: string) => {
+    const branch = branches.find((b) => b.id === branchId);
+    const branchName = branch ? branch.name : "this branch";
+
+    const confirmDelete = window.confirm(
+      `Warning: Are you absolutely sure you want to permanently delete the branch "${branchName}"? This action is permanent and students will no longer be able to select it.`
+    );
+    if (!confirmDelete) return;
+
     setActionError("");
     setActionSuccess("");
     try {
@@ -194,6 +202,11 @@ export default function SuperadminPage() {
   };
 
   const handleDeleteAdmin = async (adminId: string) => {
+    const confirmDelete = window.confirm(
+      `Warning: Are you absolutely sure you want to permanently delete the admin account "${adminId}"? This will lock them out permanently.`
+    );
+    if (!confirmDelete) return;
+
     setActionError("");
     setActionSuccess("");
     try {

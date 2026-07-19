@@ -187,6 +187,14 @@ export default function AdminPage() {
 
   // Delete Choice
   const handleDeleteChoice = async (choiceId: string) => {
+    const choice = choices.find((c) => c.id === choiceId);
+    const choiceName = choice ? choice.name : "this choice";
+    
+    const confirmDelete = window.confirm(
+      `Warning: Are you absolutely sure you want to permanently delete "${choiceName}"? This action is permanent and cannot be undone.`
+    );
+    if (!confirmDelete) return;
+
     setActionError("");
     setActionSuccess("");
     try {
