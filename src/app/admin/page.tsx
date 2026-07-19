@@ -30,6 +30,7 @@ interface StudentRequest {
   remarks?: string;
   rejectedByAdmins?: string[];
   approvedDomain?: string;
+  aiRecommendedDomain?: string;
 }
 
 export default function AdminPage() {
@@ -117,6 +118,7 @@ export default function AdminPage() {
           remarks: data.remarks || "",
           rejectedByAdmins: rejectedBy,
           approvedDomain: data.approvedDomain || "",
+          aiRecommendedDomain: data.aiRecommendedDomain || "",
         };
 
         // Student is in the pool if verified or requested this admin, and not rejected by this admin
@@ -492,6 +494,11 @@ export default function AdminPage() {
                           </td>
                           <td>
                             <div className={styles.actionBtns}>
+                              {student.aiRecommendedDomain && (
+                                <div style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 600, paddingBottom: "0.15rem" }} title="AI recommended domain">
+                                  💡 Rec: {student.aiRecommendedDomain}
+                                </div>
+                              )}
                               <select
                                 onChange={(e) => {
                                   if (e.target.value) {

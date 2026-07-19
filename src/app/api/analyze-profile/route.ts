@@ -9,7 +9,6 @@ function getGithubUsername(url: string): string | null {
 
 function getLeetcodeUsername(url: string): string | null {
   if (!url) return null;
-  // Match username from leetcode.com/username or leetcode.com/u/username
   const match = url.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9\-_]+)/i);
   return match ? match[1] : null;
 }
@@ -19,7 +18,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, branch, section, choices, github, leetcode, linkedin, areaOfInterest } = body;
 
-    // 1. Try to fetch public GitHub data if a URL is provided
+    // 1. Fetch public GitHub data if available
     let githubData = null;
     const githubUsername = getGithubUsername(github);
     if (githubUsername) {
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Try to fetch public LeetCode data if a URL is provided
+    // 2. Fetch public LeetCode data if available
     let leetcodeData = null;
     const leetcodeUsername = getLeetcodeUsername(leetcode);
     if (leetcodeUsername) {
@@ -77,11 +76,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Initialize Gemini API using key from environment
+    // 3. Initialize Gemini API
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({
         summary: `[Mock AI Analysis] Student: ${name}. Selected choices: ${choices?.join(", ")}. GitHub: ${github || "N/A"}. LeetCode Solved: ${leetcodeData ? leetcodeData.totalSolved : "N/A"}. Please configure GEMINI_API_KEY to see real AI evaluation.`,
+        recommendedDomain: choices?.[0] || "",
       });
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     const model = ai.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
-Analyze the following student profile details to provide a summary evaluation for recruitment:
+Analyze the following student profile details to provide a summary evaluation and recommend the best domain choice for recruitment:
 Name: ${name || "Unknown"}
 Branch/Section: ${branch || "N/A"} (${section || "N/A"})
 Selected Domains: ${choices?.join(", ") || "None"}
@@ -102,24 +102,33 @@ ${githubData ? JSON.stringify(githubData, null, 2) : "Could not fetch public rep
 Real-time Public LeetCode Stats Fetched:
 ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "Could not fetch public LeetCode stats directly."}
 
-Please write a highly descriptive and professional remarks note (max 3 sentences) summarizing:
-1. The best feature about this student (e.g., project quality/complexity, solved LeetCode counts/difficulties, domain fit).
-2. A clear recommendation of the absolute best category/domain for them to work on from their Selected Domains list, based on their skills.
-3. A brief analysis of their match for the selected domains.
+Please output a JSON response containing exactly two fields:
+1. "summary": A highly descriptive and professional remarks note (max 3 sentences) evaluating the student. Focus on their best feature and their coding skills. Avoid emojis.
+2. "recommendedDomain": Recommend the single best category/domain for them to work on from their Selected Domains list based on their profile. This string MUST match exactly one of the options in their Selected Domains list: [${choices?.join(", ") || "None"}].
 
-Guidelines:
-- Write in plain English without bullet points.
-- Do not use emojis.
-- Start directly with the evaluation (e.g. "Candidate shows strong skill in ...").
-- Explicitly state the recommended best domain.
+Return ONLY a valid JSON object. Do not include markdown code block formatting (like \`\`\`json).
 `;
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    const summary = result.response.text() || "Failed to generate evaluation remarks.";
-    return NextResponse.json({ summary: summary.trim() });
+    const responseText = result.response.text().trim();
+    
+    // Parse JSON safely
+    let summary = "";
+    let recommendedDomain = "";
+    try {
+      const cleanJson = responseText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+      const parsed = JSON.parse(cleanJson);
+      summary = parsed.summary || cleanJson;
+      recommendedDomain = parsed.recommendedDomain || "";
+    } catch (e) {
+      console.error("JSON parsing error for Gemini response, returning raw response:", e);
+      summary = responseText;
+    }
+
+    return NextResponse.json({ summary: summary.trim(), recommendedDomain: recommendedDomain.trim() });
   } catch (error: any) {
     console.error("AI Analysis error:", error);
     return NextResponse.json(

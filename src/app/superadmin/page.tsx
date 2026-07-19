@@ -35,6 +35,7 @@ interface Student {
   areaOfInterest?: string;
   remarks?: string;
   approvedDomain?: string;
+  aiRecommendedDomain?: string;
 }
 
 interface ActivityLog {
@@ -131,6 +132,7 @@ export default function SuperadminPage() {
           areaOfInterest: data.areaOfInterest || "",
           remarks: data.remarks || "",
           approvedDomain: data.approvedDomain || "",
+          aiRecommendedDomain: data.aiRecommendedDomain || "",
         });
       });
       setStudents(list);
@@ -401,7 +403,15 @@ export default function SuperadminPage() {
       const data = await res.json();
       if (data.summary) {
         setRemarksMap((prev) => ({ ...prev, [student.id]: data.summary }));
-        setActionSuccess(`AI evaluation loaded for ${student.name}.`);
+        
+        // Save to Firestore so it replicates to pool/assigned lists instantly
+        const studentRef = doc(db, "users", student.id);
+        await updateDoc(studentRef, {
+          remarks: data.summary,
+          aiRecommendedDomain: data.recommendedDomain || "",
+        });
+        
+        setActionSuccess(`AI evaluation loaded and saved for ${student.name}.`);
       } else if (data.error) {
         setActionError(data.error);
       }
@@ -660,6 +670,11 @@ export default function SuperadminPage() {
                           </td>
                           <td>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: "150px" }}>
+                              {s.aiRecommendedDomain && (
+                                <div style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 600, paddingBottom: "0.1rem" }} title="AI recommended domain">
+                                  💡 Rec: {s.aiRecommendedDomain}
+                                </div>
+                              )}
                               <select
                                 value={tempAdminMap[s.id] !== undefined ? tempAdminMap[s.id] : s.assignedAdminId || ""}
                                 onChange={(e) => {
