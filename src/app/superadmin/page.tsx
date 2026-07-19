@@ -390,6 +390,8 @@ export default function SuperadminPage() {
   };
 
   const handleAIAnalyze = async (student: Student) => {
+    // Clear current textbox immediately to show active regeneration
+    setRemarksMap((prev) => ({ ...prev, [student.id]: "" }));
     setAnalyzingMap((prev) => ({ ...prev, [student.id]: true }));
     setActionError("");
     setActionSuccess("");

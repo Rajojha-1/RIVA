@@ -111,6 +111,7 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7 },
     });
 
     const responseText = result.response.text().trim();
