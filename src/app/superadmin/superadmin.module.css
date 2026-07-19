@@ -447,3 +447,20 @@
   cursor: pointer;
   font-weight: 600;
 }
+
+.linksCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.link {
+  color: var(--primary);
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+

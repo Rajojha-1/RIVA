@@ -29,6 +29,10 @@ interface Student {
   requestedAdminId?: string;
   assignedAdminId?: string;
   phone?: string;
+  github?: string;
+  leetcode?: string;
+  linkedin?: string;
+  areaOfInterest?: string;
 }
 
 interface ActivityLog {
@@ -115,6 +119,10 @@ export default function SuperadminPage() {
           requestedAdminId: data.requestedAdminId || "",
           assignedAdminId: data.assignedAdminId || "",
           phone: data.phone || "",
+          github: data.github || "",
+          leetcode: data.leetcode || "",
+          linkedin: data.linkedin || "",
+          areaOfInterest: data.areaOfInterest || "",
         });
       });
       setStudents(list);
@@ -437,6 +445,7 @@ export default function SuperadminPage() {
                         <th>Student Details</th>
                         <th>Branch & Section</th>
                         <th>Choices Made</th>
+                        <th>Profiles & Interests</th>
                         <th>Verification Status</th>
                         <th>Action</th>
                       </tr>
@@ -459,6 +468,30 @@ export default function SuperadminPage() {
                                   {i + 1}. {c}
                                 </span>
                               ))}
+                            </div>
+                          </td>
+                          <td>
+                            <div className={styles.linksCol}>
+                              {s.github && (
+                                <a href={s.github} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  GitHub
+                                </a>
+                              )}
+                              {s.leetcode && (
+                                <a href={s.leetcode} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  LeetCode
+                                </a>
+                              )}
+                              {s.linkedin && (
+                                <a href={s.linkedin} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  LinkedIn
+                                </a>
+                              )}
+                              {s.areaOfInterest && (
+                                <div className={styles.mutedText} style={{ marginTop: "0.25rem" }}>
+                                  Interest: <em>{s.areaOfInterest}</em>
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td>
