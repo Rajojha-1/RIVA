@@ -271,6 +271,7 @@
 
 .customTable {
   width: 100%;
+  min-width: 950px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.8rem;
