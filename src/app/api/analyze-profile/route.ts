@@ -156,7 +156,13 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
       }
     }
 
-    return NextResponse.json({ summary: summary.trim(), recommendedDomain: matchedDomain });
+    // Append recommendation to the summary text so it is written inside the textarea
+    let finalSummary = summary.trim();
+    if (matchedDomain && !finalSummary.toLowerCase().includes("recommended domain")) {
+      finalSummary = `${finalSummary} Recommended Domain: ${matchedDomain}.`;
+    }
+
+    return NextResponse.json({ summary: finalSummary, recommendedDomain: matchedDomain });
   } catch (error: any) {
     console.error("AI Analysis error:", error);
     return NextResponse.json(
