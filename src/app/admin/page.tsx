@@ -177,6 +177,12 @@ export default function AdminPage() {
         name: newChoiceName.trim(),
         createdByAdmin: adminUsername,
       });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: adminUsername,
+        action: "Add Choice",
+        details: `Added choice "${newChoiceName.trim()}"`,
+        timestamp: new Date().toISOString(),
+      });
       setNewChoiceName("");
       setActionSuccess(`Choice "${newChoiceName}" added successfully.`);
     } catch (err) {
@@ -199,6 +205,12 @@ export default function AdminPage() {
     setActionSuccess("");
     try {
       await deleteDoc(doc(db, "choices", choiceId));
+      await setDoc(doc(collection(db, "logs")), {
+        actor: adminUsername,
+        action: "Delete Choice",
+        details: `Deleted choice "${choiceName}"`,
+        timestamp: new Date().toISOString(),
+      });
       setActionSuccess("Choice removed successfully.");
     } catch (err) {
       console.error("Error deleting choice:", err);
@@ -210,12 +222,21 @@ export default function AdminPage() {
   const handleAcceptRequest = async (studentId: string) => {
     setActionError("");
     setActionSuccess("");
+    const student = studentRequests.find((s) => s.id === studentId);
+    const studentName = student ? student.name : "Student";
+
     try {
       const studentRef = doc(db, "users", studentId);
       await updateDoc(studentRef, {
         status: "approved",
         assignedAdminId: adminUsername,
         requestedAdminId: "", // Clear request once approved
+      });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: adminUsername,
+        action: "Approve Student",
+        details: `Approved request for student "${studentName}"`,
+        timestamp: new Date().toISOString(),
       });
       setActionSuccess("Student request approved.");
     } catch (err) {
@@ -228,11 +249,20 @@ export default function AdminPage() {
   const handleRejectRequest = async (studentId: string) => {
     setActionError("");
     setActionSuccess("");
+    const student = studentRequests.find((s) => s.id === studentId);
+    const studentName = student ? student.name : "Student";
+
     try {
       const studentRef = doc(db, "users", studentId);
       await updateDoc(studentRef, {
         status: "verified", // Reset to verified so they can request another admin
         requestedAdminId: "", // Clear current request
+      });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: adminUsername,
+        action: "Reject Student",
+        details: `Rejected request for student "${studentName}"`,
+        timestamp: new Date().toISOString(),
       });
       setActionSuccess("Student request rejected.");
     } catch (err) {

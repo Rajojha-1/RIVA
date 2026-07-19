@@ -31,6 +31,14 @@ interface Student {
   phone?: string;
 }
 
+interface ActivityLog {
+  id: string;
+  actor: string;
+  action: string;
+  details: string;
+  timestamp: string;
+}
+
 export default function SuperadminPage() {
   const [passcode, setPasscode] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -38,12 +46,13 @@ export default function SuperadminPage() {
   const [loading, setLoading] = useState(true);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"verification" | "assign" | "branches" | "admins">("verification");
+  const [activeTab, setActiveTab] = useState<"verification" | "assign" | "branches" | "admins" | "logs">("verification");
 
   // Data State
   const [students, setStudents] = useState<Student[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
 
   // Input States
   const [newBranchName, setNewBranchName] = useState("");
@@ -111,10 +120,29 @@ export default function SuperadminPage() {
       setStudents(list);
     });
 
+    // Logs
+    const unsubLogs = onSnapshot(collection(db, "logs"), (snap) => {
+      const list: ActivityLog[] = [];
+      snap.forEach((doc) => {
+        const data = doc.data();
+        list.push({
+          id: doc.id,
+          actor: data.actor || "",
+          action: data.action || "",
+          details: data.details || "",
+          timestamp: data.timestamp || "",
+        });
+      });
+      // Sort by newest log first
+      list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setLogs(list);
+    });
+
     return () => {
       unsubBranches();
       unsubAdmins();
       unsubStudents();
+      unsubLogs();
     };
   }, [isAuthorized]);
 
@@ -148,6 +176,12 @@ export default function SuperadminPage() {
       // Use auto-generated document ID to prevent path separator errors
       const branchRef = doc(collection(db, "branches"));
       await setDoc(branchRef, { name: newBranchName.trim() });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Add Branch",
+        details: `Added branch "${newBranchName.trim()}"`,
+        timestamp: new Date().toISOString(),
+      });
       setNewBranchName("");
       setActionSuccess(`Branch "${newBranchName}" added successfully.`);
     } catch (err) {
@@ -169,6 +203,12 @@ export default function SuperadminPage() {
     setActionSuccess("");
     try {
       await deleteDoc(doc(db, "branches", branchId));
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Delete Branch",
+        details: `Deleted branch "${branchName}"`,
+        timestamp: new Date().toISOString(),
+      });
       setActionSuccess("Branch removed successfully.");
     } catch (err) {
       console.error(err);
@@ -191,6 +231,12 @@ export default function SuperadminPage() {
         password: newAdminPassword.trim(),
         name: newAdminName.trim() || newAdminUsername.trim(),
       });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Create Admin",
+        details: `Created admin account "${adminId}"`,
+        timestamp: new Date().toISOString(),
+      });
       setNewAdminUsername("");
       setNewAdminPassword("");
       setNewAdminName("");
@@ -211,6 +257,12 @@ export default function SuperadminPage() {
     setActionSuccess("");
     try {
       await deleteDoc(doc(db, "admins", adminId));
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Delete Admin",
+        details: `Deleted admin account "${adminId}"`,
+        timestamp: new Date().toISOString(),
+      });
       setActionSuccess("Admin account removed successfully.");
     } catch (err) {
       console.error(err);
@@ -222,10 +274,19 @@ export default function SuperadminPage() {
   const handleVerifyStudent = async (studentId: string) => {
     setActionError("");
     setActionSuccess("");
+    const student = students.find((s) => s.id === studentId);
+    const studentName = student ? student.name : "Student";
+
     try {
       const studentRef = doc(db, "users", studentId);
       await updateDoc(studentRef, {
         status: "verified",
+      });
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Verify Student",
+        details: `Verified profile for student "${studentName}"`,
+        timestamp: new Date().toISOString(),
       });
       setActionSuccess("Student profile verified successfully. The student can now choose an admin.");
     } catch (err) {
@@ -237,6 +298,9 @@ export default function SuperadminPage() {
   const handleManualAssign = async (studentId: string, adminId: string) => {
     setActionError("");
     setActionSuccess("");
+    const student = students.find((s) => s.id === studentId);
+    const studentName = student ? student.name : "Student";
+
     try {
       const studentRef = doc(db, "users", studentId);
       if (!adminId) {
@@ -246,12 +310,24 @@ export default function SuperadminPage() {
           assignedAdminId: "",
           requestedAdminId: "",
         });
+        await setDoc(doc(collection(db, "logs")), {
+          actor: "superadmin",
+          action: "Assign Student",
+          details: `Unassigned student "${studentName}"`,
+          timestamp: new Date().toISOString(),
+        });
         setActionSuccess("Student unassigned successfully.");
       } else {
         await updateDoc(studentRef, {
           status: "approved",
           assignedAdminId: adminId,
           requestedAdminId: "",
+        });
+        await setDoc(doc(collection(db, "logs")), {
+          actor: "superadmin",
+          action: "Assign Student",
+          details: `Assigned student "${studentName}" to Admin "${adminId}"`,
+          timestamp: new Date().toISOString(),
         });
         setActionSuccess(`Student assigned to Admin "${adminId}".`);
       }
@@ -331,6 +407,12 @@ export default function SuperadminPage() {
               className={`${styles.sidebarLink} ${activeTab === "admins" ? styles.active : ""}`}
             >
               Manage Admins ({admins.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`${styles.sidebarLink} ${activeTab === "logs" ? styles.active : ""}`}
+            >
+              Activity Logs ({logs.length})
             </button>
           </div>
         </aside>
@@ -585,6 +667,52 @@ export default function SuperadminPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {activeTab === "logs" && (
+            <div className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>System Activity Logs</h3>
+              <p className={styles.subtitle}>Audit trail of additions, deletions, student mappings, and verifications.</p>
+              
+              {logs.length === 0 ? (
+                <p className={styles.emptyText}>No activity logs recorded yet.</p>
+              ) : (
+                <div className={styles.tableContainer}>
+                  <table className={styles.customTable}>
+                    <thead>
+                      <tr>
+                        <th>Timestamp</th>
+                        <th>User (Actor)</th>
+                        <th>Action Category</th>
+                        <th>Details Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {logs.map((log) => (
+                        <tr key={log.id}>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            {new Date(log.timestamp).toLocaleString()}
+                          </td>
+                          <td>
+                            <strong>{log.actor}</strong>
+                          </td>
+                          <td>
+                            <span className={
+                              log.action.includes("Delete") ? styles.badgePending :
+                              log.action.includes("Add") || log.action.includes("Create") ? styles.badgeSuccess :
+                              styles.badgeSuccess
+                            }>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td>{log.details}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </main>
