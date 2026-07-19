@@ -59,6 +59,7 @@ export default function SuperadminPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
+  const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
 
   // Input States
   const [newBranchName, setNewBranchName] = useState("");
@@ -376,6 +377,32 @@ export default function SuperadminPage() {
     }
   };
 
+  const handleAIAnalyze = async (student: Student) => {
+    setAnalyzingMap((prev) => ({ ...prev, [student.id]: true }));
+    setActionError("");
+    setActionSuccess("");
+    try {
+      const res = await fetch("/api/analyze-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student),
+      });
+      if (!res.ok) throw new Error("API call failed");
+      const data = await res.json();
+      if (data.summary) {
+        setRemarksMap((prev) => ({ ...prev, [student.id]: data.summary }));
+        setActionSuccess(`AI evaluation loaded for ${student.name}.`);
+      } else if (data.error) {
+        setActionError(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to fetch AI analysis.");
+    } finally {
+      setAnalyzingMap((prev) => ({ ...prev, [student.id]: false }));
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
@@ -533,6 +560,14 @@ export default function SuperadminPage() {
                               onChange={(e) => setRemarksMap({ ...remarksMap, [s.id]: e.target.value })}
                               rows={2}
                             />
+                            <button
+                              onClick={() => handleAIAnalyze(s)}
+                              disabled={analyzingMap[s.id]}
+                              className={styles.btnAI}
+                              style={{ marginTop: "0.25rem", width: "100%", fontSize: "0.7rem", padding: "0.2rem" }}
+                            >
+                              {analyzingMap[s.id] ? "Analyzing..." : "✨ Analyze with Gemini"}
+                            </button>
                           </td>
                           <td>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>

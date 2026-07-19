@@ -492,4 +492,27 @@
   opacity: 0.9;
 }
 
+.btnAI {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.btnAI:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnAI:disabled {
+  background-color: var(--border);
+  border-color: var(--border);
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+
 
