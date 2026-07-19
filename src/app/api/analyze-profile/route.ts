@@ -104,12 +104,14 @@ ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "Could not fetch public
 
 Please write a highly descriptive and professional remarks note (max 3 sentences) summarizing:
 1. The best feature about this student (e.g., project quality/complexity, solved LeetCode counts/difficulties, domain fit).
-2. A brief analysis of their skills and match for the selected domains.
+2. A clear recommendation of the absolute best category/domain for them to work on from their Selected Domains list, based on their skills.
+3. A brief analysis of their match for the selected domains.
 
 Guidelines:
 - Write in plain English without bullet points.
 - Do not use emojis.
 - Start directly with the evaluation (e.g. "Candidate shows strong skill in ...").
+- Explicitly state the recommended best domain.
 `;
 
     const result = await model.generateContent({
