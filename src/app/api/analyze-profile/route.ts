@@ -3,8 +3,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function getGithubUsername(url: string): string | null {
   if (!url) return null;
-  // Match username from github.com/username
   const match = url.match(/github\.com\/([a-zA-Z0-9\-]+)/i);
+  return match ? match[1] : null;
+}
+
+function getLeetcodeUsername(url: string): string | null {
+  if (!url) return null;
+  // Match username from leetcode.com/username or leetcode.com/u/username
+  const match = url.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9\-_]+)/i);
   return match ? match[1] : null;
 }
 
@@ -23,7 +29,6 @@ export async function POST(request: Request) {
         });
         if (userRes.ok) {
           const userData = await userRes.json();
-          // Fetch last 5 updated public repositories
           const reposRes = await fetch(
             `https://api.github.com/users/${githubUsername}/repos?sort=updated&per_page=5`,
             { headers: { "User-Agent": "RIVA-App" } }
@@ -46,11 +51,37 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Initialize Gemini API using key from environment
+    // 2. Try to fetch public LeetCode data if a URL is provided
+    let leetcodeData = null;
+    const leetcodeUsername = getLeetcodeUsername(leetcode);
+    if (leetcodeUsername) {
+      try {
+        const lcRes = await fetch(`https://leetcode-api-faisalshohag.vercel.app/${leetcodeUsername}`);
+        if (lcRes.ok) {
+          const lcJson = await lcRes.json();
+          leetcodeData = {
+            totalSolved: lcJson.totalSolved,
+            easySolved: lcJson.easySolved,
+            mediumSolved: lcJson.mediumSolved,
+            hardSolved: lcJson.hardSolved,
+            ranking: lcJson.ranking,
+            recentSubmissions: lcJson.recentSubmissions?.slice(0, 5).map((s: any) => ({
+              title: s.title,
+              status: s.statusDisplay,
+              lang: s.lang,
+            })) || [],
+          };
+        }
+      } catch (lcErr) {
+        console.error("Error fetching LeetCode profile:", lcErr);
+      }
+    }
+
+    // 3. Initialize Gemini API using key from environment
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({
-        summary: `[Mock AI Analysis] Student has selected: ${choices?.join(", ")}. GitHub link is ${github || "N/A"}. Please configure GEMINI_API_KEY in your env to get real analysis.`,
+        summary: `[Mock AI Analysis] Student: ${name}. Selected choices: ${choices?.join(", ")}. GitHub: ${github || "N/A"}. LeetCode Solved: ${leetcodeData ? leetcodeData.totalSolved : "N/A"}. Please configure GEMINI_API_KEY to see real AI evaluation.`,
       });
     }
 
@@ -64,14 +95,15 @@ Branch/Section: ${branch || "N/A"} (${section || "N/A"})
 Selected Domains: ${choices?.join(", ") || "None"}
 Area of Interest: ${areaOfInterest || "None"}
 LinkedIn: ${linkedin || "None"}
-LeetCode: ${leetcode || "None"}
-GitHub Link: ${github || "None"}
 
 Real-time Public GitHub Stats Fetched:
 ${githubData ? JSON.stringify(githubData, null, 2) : "Could not fetch public repository data directly."}
 
+Real-time Public LeetCode Stats Fetched:
+${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "Could not fetch public LeetCode stats directly."}
+
 Please write a highly descriptive and professional remarks note (max 3 sentences) summarizing:
-1. The best feature about this student (e.g., project variety, choice alignment, profile strength).
+1. The best feature about this student (e.g., project quality/complexity, solved LeetCode counts/difficulties, domain fit).
 2. A brief analysis of their skills and match for the selected domains.
 
 Guidelines:
