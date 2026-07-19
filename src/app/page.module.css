@@ -66,6 +66,31 @@
   max-width: 100%;
 }
 
+@media (max-width: 768px) {
+  .appContainer {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  .mainLayout {
+    flex-direction: column;
+    overflow: visible;
+    height: auto;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--sidebar-border);
+    height: auto;
+    overflow-y: visible;
+  }
+  .mainContent {
+    overflow-y: visible;
+    height: auto;
+    padding: 0.5rem;
+  }
+}
+
 .pendingVerificationCard {
   background-color: var(--card);
   border: 1px solid var(--border);

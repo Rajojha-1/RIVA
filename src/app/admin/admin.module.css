@@ -196,6 +196,42 @@
   max-width: 100%;
 }
 
+@media (max-width: 768px) {
+  .appContainer {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  .mainLayout {
+    flex-direction: column;
+    overflow: visible;
+    height: auto;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--sidebar-border);
+    height: auto;
+    overflow-y: visible;
+  }
+  .sidebarNav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .sidebarLink {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+  .mainContent {
+    overflow-y: visible;
+    height: auto;
+    padding: 0.5rem;
+  }
+}
+
 .contentCard {
   background-color: var(--card);
   border: 1px solid var(--border);
