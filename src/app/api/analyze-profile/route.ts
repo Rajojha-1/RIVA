@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenerativeAI(apiKey);
-    const model = ai.getGenerativeModel({ model: "gemini-pro" });
+    const model = ai.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
 Analyze the following student profile details to provide a summary evaluation for recruitment:
