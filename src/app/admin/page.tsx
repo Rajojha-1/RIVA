@@ -529,6 +529,7 @@ export default function AdminPage() {
                         <th>College Email</th>
                         <th>Area of Interest</th>
                         <th>Selected Choices</th>
+                        <th>Profiles</th>
                         <th>Status</th>
                       </tr>
                     </thead>
@@ -550,6 +551,25 @@ export default function AdminPage() {
                                   {i + 1}. {c}
                                 </span>
                               ))}
+                            </div>
+                          </td>
+                          <td>
+                            <div className={styles.linksCol}>
+                              {student.github && (
+                                <a href={student.github} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  GitHub
+                                </a>
+                              )}
+                              {student.leetcode && (
+                                <a href={student.leetcode} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  LeetCode
+                                </a>
+                              )}
+                              {student.linkedin && (
+                                <a href={student.linkedin} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                  LinkedIn
+                                </a>
+                              )}
                             </div>
                           </td>
                           <td>
