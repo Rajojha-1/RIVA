@@ -69,3 +69,11 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+@media (max-width: 768px) {
+  html,
+  body {
+    overflow: auto;
+    height: auto;
+  }
+}
