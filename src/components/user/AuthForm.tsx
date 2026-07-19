@@ -59,7 +59,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
         </button>
 
         <div className={styles.warningMessage}>
-          ⚠️ Use KIET email ID only
+          Use KIET email ID only
         </div>
 
         <div className={styles.divider} />

@@ -49,6 +49,8 @@ export default function AdminPage() {
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
 
+  const [selectedFilterDomain, setSelectedFilterDomain] = useState<string>("all");
+
   // Check login session on mount
   useEffect(() => {
     const session = localStorage.getItem("admin_session");
@@ -232,6 +234,30 @@ export default function AdminPage() {
     }
   };
 
+  // Grouping stats
+  const getDomainStats = () => {
+    const stats: { [key: string]: number } = {};
+    choices.forEach((c) => {
+      stats[c.name] = 0;
+    });
+    studentRequests.forEach((student) => {
+      student.choices.forEach((choice) => {
+        if (stats[choice] !== undefined) {
+          stats[choice]++;
+        } else {
+          stats[choice] = 1;
+        }
+      });
+    });
+    return stats;
+  };
+
+  const domainStats = getDomainStats();
+
+  const filteredRequests = selectedFilterDomain === "all"
+    ? studentRequests
+    : studentRequests.filter((s) => s.choices.includes(selectedFilterDomain));
+
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
@@ -292,19 +318,19 @@ export default function AdminPage() {
               onClick={() => setActiveTab("requests")}
               className={`${styles.sidebarLink} ${activeTab === "requests" ? styles.active : ""}`}
             >
-              📥 Student Requests ({studentRequests.length})
+              Student Requests ({studentRequests.length})
             </button>
             <button
               onClick={() => setActiveTab("choices")}
               className={`${styles.sidebarLink} ${activeTab === "choices" ? styles.active : ""}`}
             >
-              ⚙️ Manage Choices ({choices.length})
+              Manage Choices ({choices.length})
             </button>
             <button
               onClick={() => setActiveTab("profile")}
               className={`${styles.sidebarLink} ${activeTab === "profile" ? styles.active : ""}`}
             >
-              👤 My Account Details
+              My Account Details
             </button>
           </div>
         </aside>
@@ -317,8 +343,33 @@ export default function AdminPage() {
           {activeTab === "requests" && (
             <div className={styles.contentCard}>
               <h3 className={styles.cardTitle}>Student Admission Requests</h3>
-              {studentRequests.length === 0 ? (
-                <p className={styles.emptyText}>No pending requests found for you.</p>
+              
+              {/* Domain Stats filter pills */}
+              <div className={styles.filterSection}>
+                <span className={styles.filterTitle}>Filter by Domain Selection:</span>
+                <div className={styles.filterGrid}>
+                  <div
+                    onClick={() => setSelectedFilterDomain("all")}
+                    className={`${styles.filterPill} ${selectedFilterDomain === "all" ? styles.filterPillActive : ""}`}
+                  >
+                    <span>All Domains</span>
+                    <span className={styles.filterPillCount}>{studentRequests.length}</span>
+                  </div>
+                  {Object.entries(domainStats).map(([domain, count]) => (
+                    <div
+                      key={domain}
+                      onClick={() => setSelectedFilterDomain(domain)}
+                      className={`${styles.filterPill} ${selectedFilterDomain === domain ? styles.filterPillActive : ""}`}
+                    >
+                      <span>{domain}</span>
+                      <span className={styles.filterPillCount}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {filteredRequests.length === 0 ? (
+                <p className={styles.emptyText}>No pending requests found for the selected category.</p>
               ) : (
                 <div className={styles.tableContainer}>
                   <table className={styles.customTable}>
@@ -333,7 +384,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {studentRequests.map((student) => (
+                      {filteredRequests.map((student) => (
                         <tr key={student.id}>
                           <td>
                             <strong>{student.name}</strong>
@@ -465,7 +516,7 @@ export default function AdminPage() {
                       className={styles.deleteBtn}
                       title="Remove Choice"
                     >
-                      🗑️ Remove
+                      Remove
                     </button>
                   </div>
                 ))}

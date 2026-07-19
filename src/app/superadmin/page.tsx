@@ -299,25 +299,25 @@ export default function SuperadminPage() {
               onClick={() => setActiveTab("verification")}
               className={`${styles.sidebarLink} ${activeTab === "verification" ? styles.active : ""}`}
             >
-              🔍 Student Verification ({pendingVerificationStudents.length})
+              Student Verification ({pendingVerificationStudents.length})
             </button>
             <button
               onClick={() => setActiveTab("assign")}
               className={`${styles.sidebarLink} ${activeTab === "assign" ? styles.active : ""}`}
             >
-              👥 Student & Admin Mapping ({students.length})
+              Student & Admin Mapping ({students.length})
             </button>
             <button
               onClick={() => setActiveTab("branches")}
               className={`${styles.sidebarLink} ${activeTab === "branches" ? styles.active : ""}`}
             >
-              🏫 Manage Branches ({branches.length})
+              Manage Branches ({branches.length})
             </button>
             <button
               onClick={() => setActiveTab("admins")}
               className={`${styles.sidebarLink} ${activeTab === "admins" ? styles.active : ""}`}
             >
-              🔑 Manage Admins ({admins.length})
+              Manage Admins ({admins.length})
             </button>
           </div>
         </aside>

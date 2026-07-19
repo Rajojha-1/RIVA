@@ -77,14 +77,14 @@ export default function AdminSelector({
     if (status === "approved" && assignedAdminId) {
       return (
         <div className={styles.statusBoxSuccess}>
-          🎉 You are assigned to Admin: <strong>{assignedAdminId}</strong>
+          You are assigned to Admin: <strong>{assignedAdminId}</strong>
         </div>
       );
     }
     if (status === "pending_admin_approval" && requestedAdminId) {
       return (
         <div className={styles.statusBoxPending}>
-          ⏳ Request sent to Admin: <strong>{requestedAdminId}</strong>. Waiting for approval...
+          Request sent to Admin: <strong>{requestedAdminId}</strong>. Waiting for approval...
         </div>
       );
     }
@@ -122,7 +122,7 @@ export default function AdminSelector({
     return (
       <div className={styles.selectBox}>
         <div className={styles.statusBoxRejected}>
-          ❌ Your request was rejected. Please select another admin to send a request to.
+          Your request was rejected. Please select another admin to send a request to.
         </div>
         <div className={styles.formGroupRow} style={{ marginTop: "1rem" }}>
           <select

@@ -84,17 +84,17 @@ export default function SidebarSummary({ profile }: SidebarSummaryProps) {
       <div className={styles.linksGroup}>
         {profile.github && (
           <a href={profile.github} target="_blank" rel="noopener noreferrer" className={styles.link}>
-            🔗 GitHub
+            GitHub
           </a>
         )}
         {profile.leetcode && (
           <a href={profile.leetcode} target="_blank" rel="noopener noreferrer" className={styles.link}>
-            🔗 LeetCode
+            LeetCode
           </a>
         )}
         {profile.linkedin && (
           <a href={profile.linkedin} target="_blank" rel="noopener noreferrer" className={styles.link}>
-            🔗 LinkedIn
+            LinkedIn
           </a>
         )}
       </div>

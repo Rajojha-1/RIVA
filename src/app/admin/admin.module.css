@@ -460,3 +460,65 @@
   font-weight: 700;
   color: var(--foreground);
 }
+
+/* Category Filter Section */
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.filterTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.filterGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filterPill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.filterPill:hover {
+  background-color: var(--border);
+}
+
+.filterPillActive {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.filterPillCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: inherit;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+}
+
+.filterPillActive .filterPillCount {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
