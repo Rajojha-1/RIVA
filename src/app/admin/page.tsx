@@ -29,6 +29,7 @@ interface StudentRequest {
   assignedAdminId?: string;
   remarks?: string;
   rejectedByAdmins?: string[];
+  approvedDomain?: string;
 }
 
 export default function AdminPage() {
@@ -115,6 +116,7 @@ export default function AdminPage() {
           assignedAdminId: data.assignedAdminId || "",
           remarks: data.remarks || "",
           rejectedByAdmins: rejectedBy,
+          approvedDomain: data.approvedDomain || "",
         };
 
         // Student is in the pool if verified or requested this admin, and not rejected by this admin
@@ -150,6 +152,7 @@ export default function AdminPage() {
       const docSnap = await getDoc(adminDocRef);
 
       if (docSnap.exists() && docSnap.data().password === passwordInput) {
+        const adminData = docSnap.data();
         setAdminUsername(usernameInput);
         setAdminPassword(passwordInput);
         setIsLoggedIn(true);
@@ -229,7 +232,7 @@ export default function AdminPage() {
   };
 
   // Accept Request
-  const handleAcceptRequest = async (studentId: string) => {
+  const handleAcceptRequest = async (studentId: string, domain: string) => {
     setActionError("");
     setActionSuccess("");
     const student = studentRequests.find((s) => s.id === studentId);
@@ -240,15 +243,16 @@ export default function AdminPage() {
       await updateDoc(studentRef, {
         status: "approved",
         assignedAdminId: adminUsername,
+        approvedDomain: domain,
         requestedAdminId: "", // Clear request once approved
       });
       await setDoc(doc(collection(db, "logs")), {
         actor: adminUsername,
         action: "Approve Student",
-        details: `Approved request for student "${studentName}"`,
+        details: `Approved request for student "${studentName}" for domain "${domain}"`,
         timestamp: new Date().toISOString(),
       });
-      setActionSuccess("Student request approved.");
+      setActionSuccess(`Student request approved for "${domain}".`);
     } catch (err) {
       console.error("Error accepting request:", err);
       setActionError("Failed to approve student request.");
@@ -488,12 +492,23 @@ export default function AdminPage() {
                           </td>
                           <td>
                             <div className={styles.actionBtns}>
-                              <button
-                                onClick={() => handleAcceptRequest(student.id)}
-                                className={styles.btnAccept}
+                              <select
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    handleAcceptRequest(student.id, e.target.value);
+                                  }
+                                }}
+                                defaultValue=""
+                                className={styles.selectSmall}
+                                style={{ padding: "0.35rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
                               >
-                                Accept
-                              </button>
+                                <option value="" disabled>Accept for Domain...</option>
+                                {student.choices.map((c) => (
+                                  <option key={c} value={c}>
+                                    {c}
+                                  </option>
+                                ))}
+                              </select>
                               <button
                                 onClick={() => handleRejectRequest(student.id)}
                                 className={styles.btnReject}
@@ -528,6 +543,7 @@ export default function AdminPage() {
                         <th>Branch / Section</th>
                         <th>College Email</th>
                         <th>Area of Interest</th>
+                        <th>Approved Domain</th>
                         <th>Selected Choices</th>
                         <th>Profiles</th>
                         <th>Status</th>
@@ -544,6 +560,9 @@ export default function AdminPage() {
                           </td>
                           <td>{student.collegeEmail}</td>
                           <td>{student.areaOfInterest}</td>
+                          <td>
+                            <strong style={{ color: "var(--primary)" }}>{student.approvedDomain || "N/A"}</strong>
+                          </td>
                           <td>
                             <div className={styles.choicesBadgeGroup}>
                               {student.choices.map((c, i) => (

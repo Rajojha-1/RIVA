@@ -27,6 +27,7 @@ interface UserProfile {
   requestedAdminId?: string;
   assignedAdminId?: string;
   remarks?: string;
+  approvedDomain?: string;
 }
 
 export default function Home() {
@@ -182,6 +183,7 @@ export default function Home() {
               status={profile?.status || "verified"}
               requestedAdminId={profile?.requestedAdminId}
               assignedAdminId={profile?.assignedAdminId}
+              approvedDomain={profile?.approvedDomain}
               onUpdate={() => {}} // Snapshot listener will update automatically
             />
           )}

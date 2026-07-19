@@ -34,6 +34,7 @@ interface Student {
   linkedin?: string;
   areaOfInterest?: string;
   remarks?: string;
+  approvedDomain?: string;
 }
 
 interface ActivityLog {
@@ -60,6 +61,8 @@ export default function SuperadminPage() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
   const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
+  const [tempAdminMap, setTempAdminMap] = useState<{[studentId: string]: string}>({});
+  const [tempDomainMap, setTempDomainMap] = useState<{[studentId: string]: string}>({});
 
   // Input States
   const [newBranchName, setNewBranchName] = useState("");
@@ -127,6 +130,7 @@ export default function SuperadminPage() {
           linkedin: data.linkedin || "",
           areaOfInterest: data.areaOfInterest || "",
           remarks: data.remarks || "",
+          approvedDomain: data.approvedDomain || "",
         });
       });
       setStudents(list);
@@ -309,7 +313,7 @@ export default function SuperadminPage() {
     }
   };
 
-  const handleManualAssign = async (studentId: string, adminId: string) => {
+  const handleManualAssign = async (studentId: string, adminId: string, approvedDomain: string) => {
     setActionError("");
     setActionSuccess("");
     const student = students.find((s) => s.id === studentId);
@@ -323,6 +327,7 @@ export default function SuperadminPage() {
           status: "verified",
           assignedAdminId: "",
           requestedAdminId: "",
+          approvedDomain: "",
         });
         await setDoc(doc(collection(db, "logs")), {
           actor: "superadmin",
@@ -332,18 +337,23 @@ export default function SuperadminPage() {
         });
         setActionSuccess("Student unassigned successfully.");
       } else {
+        if (!approvedDomain) {
+          setActionError("Please select a domain choice to assign.");
+          return;
+        }
         await updateDoc(studentRef, {
           status: "approved",
           assignedAdminId: adminId,
+          approvedDomain: approvedDomain,
           requestedAdminId: "",
         });
         await setDoc(doc(collection(db, "logs")), {
           actor: "superadmin",
           action: "Assign Student",
-          details: `Assigned student "${studentName}" to Admin "${adminId}"`,
+          details: `Assigned student "${studentName}" to Admin "${adminId}" for domain "${approvedDomain}"`,
           timestamp: new Date().toISOString(),
         });
-        setActionSuccess(`Student assigned to Admin "${adminId}".`);
+        setActionSuccess(`Student assigned to Admin "${adminId}" for domain "${approvedDomain}".`);
       }
     } catch (err) {
       console.error(err);
@@ -634,20 +644,67 @@ export default function SuperadminPage() {
                             </span>
                           </td>
                           <td>{s.requestedAdminId || "None"}</td>
-                          <td>{s.assignedAdminId ? <strong>{s.assignedAdminId}</strong> : "Unassigned"}</td>
                           <td>
-                            <select
-                              value={s.assignedAdminId || ""}
-                              onChange={(e) => handleManualAssign(s.id, e.target.value)}
-                              className={styles.selectSmall}
-                            >
-                              <option value="">Unassigned</option>
-                              {admins.map((adm) => (
-                                <option key={adm.id} value={adm.username}>
-                                  {adm.name} ({adm.username})
-                                </option>
-                              ))}
-                            </select>
+                            {s.assignedAdminId ? (
+                              <div>
+                                <strong>{s.assignedAdminId}</strong>
+                                {s.approvedDomain && (
+                                  <div className={styles.mutedText} style={{ fontSize: "0.75rem", marginTop: "0.15rem" }}>
+                                    Domain: <em>{s.approvedDomain}</em>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              "Unassigned"
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: "150px" }}>
+                              <select
+                                value={tempAdminMap[s.id] !== undefined ? tempAdminMap[s.id] : s.assignedAdminId || ""}
+                                onChange={(e) => {
+                                  setTempAdminMap({ ...tempAdminMap, [s.id]: e.target.value });
+                                  if (!e.target.value) {
+                                    setTempDomainMap({ ...tempDomainMap, [s.id]: "" });
+                                  }
+                                }}
+                                className={styles.selectSmall}
+                              >
+                                <option value="">Unassigned</option>
+                                {admins.map((adm) => (
+                                  <option key={adm.id} value={adm.username}>
+                                    {adm.name} ({adm.username})
+                                  </option>
+                                ))}
+                              </select>
+
+                              {((tempAdminMap[s.id] !== "" && tempAdminMap[s.id] !== undefined) || (!tempAdminMap[s.id] && s.assignedAdminId)) && (
+                                <select
+                                  value={tempDomainMap[s.id] !== undefined ? tempDomainMap[s.id] : s.approvedDomain || ""}
+                                  onChange={(e) => setTempDomainMap({ ...tempDomainMap, [s.id]: e.target.value })}
+                                  className={styles.selectSmall}
+                                >
+                                  <option value="" disabled>Select Domain...</option>
+                                  {s.choices.map((choice) => (
+                                    <option key={choice} value={choice}>
+                                      {choice}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+
+                              <button
+                                onClick={() => {
+                                  const selectedAdmin = tempAdminMap[s.id] !== undefined ? tempAdminMap[s.id] : s.assignedAdminId || "";
+                                  const selectedDomain = tempDomainMap[s.id] !== undefined ? tempDomainMap[s.id] : s.approvedDomain || "";
+                                  handleManualAssign(s.id, selectedAdmin, selectedDomain);
+                                }}
+                                className={styles.btnAction}
+                                style={{ fontSize: "0.7rem", padding: "0.25rem", width: "100%" }}
+                              >
+                                Save Assignment
+                              </button>
+                            </div>
                           </td>
                           <td>
                             <button

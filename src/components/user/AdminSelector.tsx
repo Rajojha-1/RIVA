@@ -16,6 +16,7 @@ interface AdminSelectorProps {
   status: string;
   requestedAdminId?: string;
   assignedAdminId?: string;
+  approvedDomain?: string;
   onUpdate: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function AdminSelector({
   status,
   requestedAdminId,
   assignedAdminId,
+  approvedDomain,
   onUpdate,
 }: AdminSelectorProps) {
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -78,6 +80,11 @@ export default function AdminSelector({
       return (
         <div className={styles.statusBoxSuccess}>
           You are assigned to Admin: <strong>{assignedAdminId}</strong>
+          {approvedDomain && (
+            <div style={{ marginTop: "0.25rem", fontSize: "0.9rem" }}>
+              Domain: <strong>{approvedDomain}</strong>
+            </div>
+          )}
         </div>
       );
     }
