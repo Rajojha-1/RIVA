@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="riva-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+  </defs>
+  <!-- Squircle Background -->
+  <rect width="32" height="32" rx="8" fill="url(#riva-grad)" />
+  <!-- Stylized Geometric R -->
+  <path d="M9 8h6.5a4.5 4.5 0 0 1 4.5 4.5v0a4.5 4.5 0 0 1-4.5 4.5H12v6H9V8zm3 6h3.5a1.5 1.5 0 0 0 1.5-1.5v0a1.5 1.5 0 0 0-1.5-1.5H12v3z" fill="#ffffff" />
+  <path d="M15 17l6 7h-3.5l-5-6h2.5z" fill="#ffffff" />
+</svg>
