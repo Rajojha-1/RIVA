@@ -33,6 +33,7 @@ interface Student {
   leetcode?: string;
   linkedin?: string;
   areaOfInterest?: string;
+  remarks?: string;
 }
 
 interface ActivityLog {
@@ -57,6 +58,7 @@ export default function SuperadminPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
 
   // Input States
   const [newBranchName, setNewBranchName] = useState("");
@@ -123,6 +125,7 @@ export default function SuperadminPage() {
           leetcode: data.leetcode || "",
           linkedin: data.linkedin || "",
           areaOfInterest: data.areaOfInterest || "",
+          remarks: data.remarks || "",
         });
       });
       setStudents(list);
@@ -279,27 +282,29 @@ export default function SuperadminPage() {
   };
 
   // Student operations
-  const handleVerifyStudent = async (studentId: string) => {
+  const handleVerifyStudent = async (studentId: string, isVerified: boolean) => {
     setActionError("");
     setActionSuccess("");
     const student = students.find((s) => s.id === studentId);
     const studentName = student ? student.name : "Student";
+    const remarks = remarksMap[studentId] || "";
 
     try {
       const studentRef = doc(db, "users", studentId);
       await updateDoc(studentRef, {
-        status: "verified",
+        status: isVerified ? "verified" : "rejected",
+        remarks: remarks.trim(),
       });
       await setDoc(doc(collection(db, "logs")), {
         actor: "superadmin",
-        action: "Verify Student",
-        details: `Verified profile for student "${studentName}"`,
+        action: isVerified ? "Verify Student" : "Reject Student",
+        details: `${isVerified ? "Verified" : "Rejected"} profile for student "${studentName}". Remarks: "${remarks.trim()}"`,
         timestamp: new Date().toISOString(),
       });
-      setActionSuccess("Student profile verified successfully. The student can now choose an admin.");
+      setActionSuccess(`Student profile ${isVerified ? "verified" : "rejected"} successfully.`);
     } catch (err) {
       console.error(err);
-      setActionError("Failed to verify student profile.");
+      setActionError(`Failed to update student profile.`);
     }
   };
 
@@ -446,7 +451,7 @@ export default function SuperadminPage() {
                         <th>Branch & Section</th>
                         <th>Choices Made</th>
                         <th>Profiles & Interests</th>
-                        <th>Verification Status</th>
+                        <th>Superadmin Remarks</th>
                         <th>Action</th>
                       </tr>
                     </thead>
@@ -495,15 +500,29 @@ export default function SuperadminPage() {
                             </div>
                           </td>
                           <td>
-                            <span className={styles.badgePending}>Pending Verification</span>
+                            <textarea
+                              className={styles.textareaSmall}
+                              placeholder="Write notes/feedback about this student..."
+                              value={remarksMap[s.id] || s.remarks || ""}
+                              onChange={(e) => setRemarksMap({ ...remarksMap, [s.id]: e.target.value })}
+                              rows={2}
+                            />
                           </td>
                           <td>
-                            <button
-                              onClick={() => handleVerifyStudent(s.id)}
-                              className={styles.btnAction}
-                            >
-                              Verify Profile
-                            </button>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                              <button
+                                onClick={() => handleVerifyStudent(s.id, true)}
+                                className={styles.btnAction}
+                              >
+                                Verify Profile
+                              </button>
+                              <button
+                                onClick={() => handleVerifyStudent(s.id, false)}
+                                className={styles.btnReject}
+                              >
+                                Reject Profile
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

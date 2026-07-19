@@ -464,3 +464,32 @@
   text-decoration: underline;
 }
 
+.textareaSmall {
+  width: 100%;
+  padding: 0.35rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--input);
+  color: var(--foreground);
+  resize: vertical;
+}
+
+.btnReject {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+  border: none;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btnReject:hover {
+  opacity: 0.9;
+}
+
+

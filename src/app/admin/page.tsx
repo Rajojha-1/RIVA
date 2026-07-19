@@ -27,6 +27,8 @@ interface StudentRequest {
   status: string;
   requestedAdminId?: string;
   assignedAdminId?: string;
+  remarks?: string;
+  rejectedByAdmins?: string[];
 }
 
 export default function AdminPage() {
@@ -43,13 +45,13 @@ export default function AdminPage() {
 
   // Dashboard Data
   const [choices, setChoices] = useState<Choice[]>([]);
-  const [newChoiceName, setNewChoiceName] = useState("");
   const [studentRequests, setStudentRequests] = useState<StudentRequest[]>([]);
   const [assignedStudents, setAssignedStudents] = useState<StudentRequest[]>([]);
-  const [actionError, setActionError] = useState("");
-  const [actionSuccess, setActionSuccess] = useState("");
-
   const [selectedFilterDomain, setSelectedFilterDomain] = useState<string>("all");
+
+  const [newChoiceName, setNewChoiceName] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+  const [actionError, setActionError] = useState("");
 
   // Check login session on mount
   useEffect(() => {
@@ -94,6 +96,8 @@ export default function AdminPage() {
 
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        const rejectedBy = data.rejectedByAdmins || [];
+
         const student: StudentRequest = {
           id: docSnap.id,
           name: data.name || "",
@@ -109,9 +113,15 @@ export default function AdminPage() {
           status: data.status || "",
           requestedAdminId: data.requestedAdminId || "",
           assignedAdminId: data.assignedAdminId || "",
+          remarks: data.remarks || "",
+          rejectedByAdmins: rejectedBy,
         };
 
-        if (student.requestedAdminId === adminUsername && student.status === "pending_admin_approval") {
+        // Student is in the pool if verified or requested this admin, and not rejected by this admin
+        const isPendingForThisAdmin = student.requestedAdminId === adminUsername && student.status === "pending_admin_approval";
+        const isVerifiedInPool = student.status === "verified" && !rejectedBy.includes(adminUsername);
+
+        if (isPendingForThisAdmin || isVerifiedInPool) {
           requestsList.push(student);
         }
         if (student.assignedAdminId === adminUsername && student.status === "approved") {
@@ -251,17 +261,20 @@ export default function AdminPage() {
     setActionSuccess("");
     const student = studentRequests.find((s) => s.id === studentId);
     const studentName = student ? student.name : "Student";
+    const currentRejected = student?.rejectedByAdmins || [];
 
     try {
       const studentRef = doc(db, "users", studentId);
+      const updatedRejected = [...new Set([...currentRejected, adminUsername])];
       await updateDoc(studentRef, {
-        status: "verified", // Reset to verified so they can request another admin
-        requestedAdminId: "", // Clear current request
+        status: "verified",
+        requestedAdminId: "",
+        rejectedByAdmins: updatedRejected,
       });
       await setDoc(doc(collection(db, "logs")), {
         actor: adminUsername,
         action: "Reject Student",
-        details: `Rejected request for student "${studentName}"`,
+        details: `Rejected student "${studentName}" from Admin node`,
         timestamp: new Date().toISOString(),
       });
       setActionSuccess("Student request rejected.");
@@ -425,6 +438,11 @@ export default function AdminPage() {
                         <tr key={student.id}>
                           <td>
                             <strong>{student.name}</strong>
+                            {student.remarks && (
+                              <div style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "var(--primary)", maxWidth: "220px", lineHeight: "1.2" }}>
+                                <strong>Superadmin Remarks:</strong> {student.remarks}
+                              </div>
+                            )}
                           </td>
                           <td>
                             {student.branch} (Sec {student.section})

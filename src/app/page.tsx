@@ -26,6 +26,7 @@ interface UserProfile {
   status?: string;
   requestedAdminId?: string;
   assignedAdminId?: string;
+  remarks?: string;
 }
 
 export default function Home() {
@@ -122,25 +123,56 @@ export default function Home() {
 
           {hasFilledProfile && hasSelectedChoices && !isVerified && (
             <div className={styles.pendingVerificationCard}>
-              <h3>Verification Pending</h3>
-              <p>
-                You have successfully saved your profile details and selections. Your profile is now under review by the Superadmin.
-              </p>
-              <div className={styles.statusBadge}>Status: Pending Verification</div>
-              <button 
-                onClick={() => {
-                  // Allow editing profile if they click
-                  if (confirm("Would you like to edit your choices or profile? This will reset verification status.")) {
-                    const userRef = doc(db, "users", user.uid);
-                    import("firebase/firestore").then(({ updateDoc }) => {
-                      updateDoc(userRef, { status: "draft", choices: [] });
-                    });
-                  }
-                }}
-                className={styles.editBtn}
-              >
-                Edit Selections
-              </button>
+              {profile?.status === "rejected" ? (
+                <>
+                  <h3 style={{ color: "var(--destructive)" }}>Verification Rejected</h3>
+                  <p>
+                    Your profile details were reviewed and rejected by the Superadmin.
+                  </p>
+                  {profile.remarks && (
+                    <div style={{ margin: "1rem 0", padding: "1rem", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius)", borderLeft: "4px solid var(--destructive)" }}>
+                      <strong>Feedback Remarks:</strong> "{profile.remarks}"
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => {
+                      const userRef = doc(db, "users", user.uid);
+                      import("firebase/firestore").then(({ updateDoc }) => {
+                        updateDoc(userRef, { status: "draft" });
+                      });
+                    }}
+                    className={styles.editBtn}
+                  >
+                    Edit Profile & Selections
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3>Verification Pending</h3>
+                  <p>
+                    You have successfully saved your profile details and selections. Your profile is now under review by the Superadmin.
+                  </p>
+                  <div className={styles.statusBadge}>Status: Pending Verification</div>
+                  {profile?.remarks && (
+                    <div style={{ margin: "1rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
+                      <strong>Latest Superadmin Note:</strong> "{profile.remarks}"
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => {
+                      if (confirm("Would you like to edit your choices or profile? This will reset verification status.")) {
+                        const userRef = doc(db, "users", user.uid);
+                        import("firebase/firestore").then(({ updateDoc }) => {
+                          updateDoc(userRef, { status: "draft", choices: [] });
+                        });
+                      }
+                    }}
+                    className={styles.editBtn}
+                  >
+                    Edit Selections
+                  </button>
+                </>
+              )}
             </div>
           )}
 
