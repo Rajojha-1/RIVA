@@ -104,7 +104,7 @@ ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "Could not fetch public
 
 Please output a JSON response containing exactly two fields:
 1. "summary": A highly descriptive and professional remarks note (max 3 sentences) evaluating the student. Focus on their best feature and their coding skills. Avoid emojis.
-2. "recommendedDomain": Recommend the single best category/domain for them to work on from their Selected Domains list based on their profile. This string MUST match exactly one of the options in their Selected Domains list: [${choices?.join(", ") || "None"}].
+2. "recommendedDomain": Recommend the single best category/domain for them to work on from their Selected Domains list based on their profile. This string MUST match exactly one of the options in their Selected Domains list: [${choices?.join(", ") || "None"}]. Do not make up a new category.
 
 Return ONLY a valid JSON object. Do not include markdown code block formatting (like \`\`\`json).
 `;
@@ -128,7 +128,35 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
       summary = responseText;
     }
 
-    return NextResponse.json({ summary: summary.trim(), recommendedDomain: recommendedDomain.trim() });
+    // Match recommendation strictly against the student's choices
+    let matchedDomain = "";
+    if (choices && choices.length > 0) {
+      const cleanRec = (recommendedDomain || "").toLowerCase().trim();
+      if (cleanRec) {
+        const found = choices.find(
+          (c: string) =>
+            c.toLowerCase().trim() === cleanRec ||
+            cleanRec.includes(c.toLowerCase().trim()) ||
+            c.toLowerCase().trim().includes(cleanRec)
+        );
+        if (found) {
+          matchedDomain = found;
+        } else {
+          for (const choice of choices) {
+            const words = choice.toLowerCase().split(/\s+/);
+            if (words.some((w: string) => w.length > 3 && cleanRec.includes(w))) {
+              matchedDomain = choice;
+              break;
+            }
+          }
+        }
+      }
+      if (!matchedDomain) {
+        matchedDomain = choices[0];
+      }
+    }
+
+    return NextResponse.json({ summary: summary.trim(), recommendedDomain: matchedDomain });
   } catch (error: any) {
     console.error("AI Analysis error:", error);
     return NextResponse.json(
