@@ -448,83 +448,89 @@ export default function AdminPage() {
                     </thead>
                     <tbody>
                       {filteredRequests.map((student) => (
-                        <tr key={student.id}>
-                          <td>
-                            <strong>{student.name}</strong>
-                            {student.remarks && (
-                              <div style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "var(--primary)", maxWidth: "220px", lineHeight: "1.2" }}>
-                                <strong>Superadmin Remarks:</strong> {student.remarks}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            {student.branch} (Sec {student.section})
-                          </td>
-                          <td>
-                            <div>{student.collegeEmail}</div>
-                            <div className={styles.mutedText}>{student.phone}</div>
-                          </td>
-                          <td>
-                            <div className={styles.choicesBadgeGroup}>
-                              {student.choices.map((c, i) => (
-                                <span key={c} className={styles.choiceMiniBadge}>
-                                  {i + 1}. {c}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.linksCol}>
-                              {student.github && (
-                                <a href={student.github} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                                  GitHub
-                                </a>
-                              )}
-                              {student.leetcode && (
-                                <a href={student.leetcode} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                                  LeetCode
-                                </a>
-                              )}
-                              {student.linkedin && (
-                                <a href={student.linkedin} target="_blank" rel="noopener noreferrer" className={styles.link}>
-                                  LinkedIn
-                                </a>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.actionBtns}>
-                              {student.aiRecommendedDomain && (
-                                <div style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 600, paddingBottom: "0.15rem" }} title="AI recommended domain">
-                                  💡 Rec: {student.aiRecommendedDomain}
-                                </div>
-                              )}
-                              <select
-                                onChange={(e) => {
-                                  if (e.target.value) {
-                                    handleAcceptRequest(student.id, e.target.value);
-                                  }
-                                }}
-                                defaultValue=""
-                                className={styles.selectSmall}
-                                style={{ padding: "0.35rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
-                              >
-                                <option value="" disabled>Accept for Domain...</option>
-                                {student.choices.map((c) => (
-                                  <option key={c} value={c}>
-                                    {c}
-                                  </option>
+                        <React.Fragment key={student.id}>
+                          <tr>
+                            <td>
+                              <strong>{student.name}</strong>
+                            </td>
+                            <td>
+                              {student.branch} (Sec {student.section})
+                            </td>
+                            <td>
+                              <div>{student.collegeEmail}</div>
+                              <div className={styles.mutedText}>{student.phone}</div>
+                            </td>
+                            <td>
+                              <div className={styles.choicesBadgeGroup}>
+                                {student.choices.map((c, i) => (
+                                  <span key={c} className={styles.choiceMiniBadge}>
+                                    {i + 1}. {c}
+                                  </span>
                                 ))}
-                              </select>
-                              <button
-                                onClick={() => handleRejectRequest(student.id)}
-                                className={styles.btnReject}
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                              </div>
+                            </td>
+                            <td>
+                              <div className={styles.linksCol}>
+                                {student.github && (
+                                  <a href={student.github} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                    GitHub
+                                  </a>
+                                )}
+                                {student.leetcode && (
+                                  <a href={student.leetcode} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                    LeetCode
+                                  </a>
+                                )}
+                                {student.linkedin && (
+                                  <a href={student.linkedin} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                                    LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <div className={styles.actionBtns}>
+                                {student.aiRecommendedDomain && (
+                                  <div style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 600, paddingBottom: "0.15rem" }} title="AI recommended domain">
+                                    💡 Rec: {student.aiRecommendedDomain}
+                                  </div>
+                                )}
+                                <select
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleAcceptRequest(student.id, e.target.value);
+                                    }
+                                  }}
+                                  defaultValue=""
+                                  className={styles.selectSmall}
+                                  style={{ padding: "0.35rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                                >
+                                  <option value="" disabled>Accept for Domain...</option>
+                                  {student.choices.map((c) => (
+                                    <option key={c} value={c}>
+                                      {c}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => handleRejectRequest(student.id)}
+                                  className={styles.btnReject}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          {student.remarks && (
+                            <tr>
+                              <td colSpan={6} style={{ padding: "0.6rem 1rem", backgroundColor: "rgba(var(--primary-rgb), 0.05)", borderTop: "none" }}>
+                                <div style={{ fontSize: "0.75rem", color: "var(--primary)", lineHeight: "1.4" }}>
+                                  <strong>Superadmin Remarks:</strong> {student.remarks}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
