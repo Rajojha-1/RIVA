@@ -350,6 +350,32 @@ export default function SuperadminPage() {
     }
   };
 
+  const handleDeleteStudent = async (studentId: string) => {
+    const student = students.find((s) => s.id === studentId);
+    const studentName = student ? student.name : "this student";
+
+    const confirmDelete = window.confirm(
+      `Warning: Are you absolutely sure you want to permanently delete the student "${studentName}" from the platform? This will erase all their details and cannot be undone.`
+    );
+    if (!confirmDelete) return;
+
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await deleteDoc(doc(db, "users", studentId));
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Delete Student",
+        details: `Deleted student profile for "${studentName}" (${studentId})`,
+        timestamp: new Date().toISOString(),
+      });
+      setActionSuccess("Student profile deleted successfully.");
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to delete student.");
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
@@ -551,6 +577,7 @@ export default function SuperadminPage() {
                         <th>Admin Requested</th>
                         <th>Assigned Admin</th>
                         <th>Assign Admin Override</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -586,6 +613,15 @@ export default function SuperadminPage() {
                                 </option>
                               ))}
                             </select>
+                          </td>
+                          <td>
+                            <button
+                              onClick={() => handleDeleteStudent(s.id)}
+                              className={styles.btnDelete}
+                              title="Delete student from platform"
+                            >
+                              Delete User
+                            </button>
                           </td>
                         </tr>
                       ))}

@@ -41,7 +41,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<"profile" | "choices" | "requests">("requests");
+  const [activeTab, setActiveTab] = useState<"profile" | "choices" | "requests" | "assigned">("requests");
 
   // Dashboard Data
   const [choices, setChoices] = useState<Choice[]>([]);
@@ -158,11 +158,11 @@ export default function AdminPage() {
           JSON.stringify({ username: usernameInput, password: passwordInput })
         );
       } else {
-        setLoginError("Invalid username or password.");
+        setLoginError("Invalid admin credentials.");
       }
     } catch (err) {
-      console.error(err);
-      setLoginError("An error occurred during login. Please try again.");
+      console.error("Login error:", err);
+      setLoginError("Failed to authenticate.");
     }
   };
 
@@ -304,15 +304,16 @@ export default function AdminPage() {
 
   const domainStats = getDomainStats();
 
-  const filteredRequests = selectedFilterDomain === "all"
-    ? studentRequests
-    : studentRequests.filter((s) => s.choices.includes(selectedFilterDomain));
+  const filteredRequests = studentRequests.filter((req) => {
+    if (selectedFilterDomain === "all") return true;
+    return req.choices.includes(selectedFilterDomain);
+  });
 
   if (loading) {
     return (
       <div className={styles.loadingScreen}>
         <div className={styles.spinner} />
-        <p>Loading Admin Portal...</p>
+        <p>Loading Admin Dashboard...</p>
       </div>
     );
   }
@@ -323,7 +324,7 @@ export default function AdminPage() {
         <Navbar />
         <div className={styles.authContainer}>
           <form onSubmit={handleLogin} className={styles.authCard}>
-            <h2 className={styles.title}>Admin Login</h2>
+            <h2 className={styles.title}>Admin Access</h2>
             {loginError && <div className={styles.errorMessage}>{loginError}</div>}
             <div className={styles.formGroup}>
               <label className={styles.label}>Admin Username</label>
@@ -333,7 +334,7 @@ export default function AdminPage() {
                 className={styles.input}
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="e.g. admin1"
+                placeholder="Enter admin username"
               />
             </div>
             <div className={styles.formGroup}>
@@ -344,7 +345,7 @@ export default function AdminPage() {
                 className={styles.input}
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter password"
               />
             </div>
             <button type="submit" className={styles.submitBtn}>
@@ -368,7 +369,13 @@ export default function AdminPage() {
               onClick={() => setActiveTab("requests")}
               className={`${styles.sidebarLink} ${activeTab === "requests" ? styles.active : ""}`}
             >
-              Student Requests ({studentRequests.length})
+              Student Pool ({studentRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("assigned")}
+              className={`${styles.sidebarLink} ${activeTab === "assigned" ? styles.active : ""}`}
+            >
+              Assigned Students ({assignedStudents.length})
             </button>
             <button
               onClick={() => setActiveTab("choices")}
@@ -502,39 +509,56 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {assignedStudents.length > 0 && (
-                <div style={{ marginTop: "2rem" }}>
-                  <h3 className={styles.cardTitle}>Assigned Students</h3>
-                  <div className={styles.tableContainer}>
-                    <table className={styles.customTable}>
-                      <thead>
-                        <tr>
-                          <th>Student Name</th>
-                          <th>Branch / Section</th>
-                          <th>College Email</th>
-                          <th>Area of Interest</th>
-                          <th>Status</th>
+            </div>
+          )}
+
+          {activeTab === "assigned" && (
+            <div className={styles.contentCard}>
+              <h3 className={styles.cardTitle}>My Assigned Students</h3>
+              <p className={styles.subtitle}>List of students approved and enrolled under your admin node.</p>
+
+              {assignedStudents.length === 0 ? (
+                <p className={styles.emptyText}>You haven't accepted any students yet.</p>
+              ) : (
+                <div className={styles.tableContainer}>
+                  <table className={styles.customTable}>
+                    <thead>
+                      <tr>
+                        <th>Student Name</th>
+                        <th>Branch / Section</th>
+                        <th>College Email</th>
+                        <th>Area of Interest</th>
+                        <th>Selected Choices</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assignedStudents.map((student) => (
+                        <tr key={student.id}>
+                          <td>
+                            <strong>{student.name}</strong>
+                          </td>
+                          <td>
+                            {student.branch} (Sec {student.section})
+                          </td>
+                          <td>{student.collegeEmail}</td>
+                          <td>{student.areaOfInterest}</td>
+                          <td>
+                            <div className={styles.choicesBadgeGroup}>
+                              {student.choices.map((c, i) => (
+                                <span key={c} className={styles.choiceMiniBadge}>
+                                  {i + 1}. {c}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={styles.badgeSuccess}>Approved & Enrolled</span>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {assignedStudents.map((student) => (
-                          <tr key={student.id}>
-                            <td>
-                              <strong>{student.name}</strong>
-                            </td>
-                            <td>
-                              {student.branch} (Sec {student.section})
-                            </td>
-                            <td>{student.collegeEmail}</td>
-                            <td>{student.areaOfInterest}</td>
-                            <td>
-                              <span className={styles.badgeSuccess}>Approved & Enrolled</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
