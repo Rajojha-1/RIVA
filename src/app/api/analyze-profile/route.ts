@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 function getGithubUsername(url: string): string | null {
   if (!url) return null;
@@ -18,7 +20,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, branch, section, choices, github, leetcode, linkedin, areaOfInterest } = body;
 
-    // 1. Fetch public GitHub data if available
+    // 1. Fetch all available selection choices/domains from Firestore
+    const choicesSnap = await getDocs(collection(db, "choices"));
+    const allGlobalChoices: string[] = [];
+    choicesSnap.forEach((doc) => {
+      allGlobalChoices.push(doc.data().name);
+    });
+
+    // 2. Fetch public GitHub data if available
     let githubData = null;
     const githubUsername = getGithubUsername(github);
     if (githubUsername) {
@@ -35,7 +44,7 @@ export async function POST(request: Request) {
           const reposData = reposRes.ok ? await reposRes.json() : [];
 
           githubData = {
-            bio: userData.bio || "No bio set",
+            login: userData.login,
             public_repos: userData.public_repos,
             followers: userData.followers,
             top_repos: reposData.map((r: any) => ({
@@ -50,7 +59,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Fetch public LeetCode data if available
+    // 3. Fetch public LeetCode data if available
     let leetcodeData = null;
     const leetcodeUsername = getLeetcodeUsername(leetcode);
     if (leetcodeUsername) {
@@ -76,12 +85,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Initialize Gemini API
+    // 4. Initialize Gemini API
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({
         summary: `[Mock AI Analysis] Student: ${name}. Selected choices: ${choices?.join(", ")}. GitHub: ${github || "N/A"}. LeetCode Solved: ${leetcodeData ? leetcodeData.totalSolved : "N/A"}. Please configure GEMINI_API_KEY to see real AI evaluation.`,
-        recommendedDomain: choices?.[0] || "",
+        recommendedDomain: allGlobalChoices[0] || "",
       });
     }
 
@@ -89,10 +98,10 @@ export async function POST(request: Request) {
     const model = ai.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
-Analyze the following student profile details to provide a summary evaluation and recommend the best domain choice for recruitment:
+Analyze the following student profile details to provide a summary evaluation and recommend the absolute best category choice for recruitment:
 Name: ${name || "Unknown"}
 Branch/Section: ${branch || "N/A"} (${section || "N/A"})
-Selected Domains: ${choices?.join(", ") || "None"}
+Student's Chosen Domains: ${choices?.join(", ") || "None"}
 Area of Interest: ${areaOfInterest || "None"}
 LinkedIn: ${linkedin || "None"}
 
@@ -102,9 +111,15 @@ ${githubData ? JSON.stringify(githubData, null, 2) : "Could not fetch public rep
 Real-time Public LeetCode Stats Fetched:
 ${leetcodeData ? JSON.stringify(leetcodeData, null, 2) : "Could not fetch public LeetCode stats directly."}
 
+EVALUATION CRITICALITY RULES:
+- You MUST be extremely critical, strict, and brutally honest in your evaluation. 
+- Do NOT use generic praise or sugarcoating. 
+- If the student's portfolio is weak, lacks projects, has empty repositories, or has solved very few/easy LeetCode problems, call it out directly and be very hard.
+- Assess their engineering readiness strictly based on the real statistics provided. If their work is low quality, say so plainly.
+
 Please output a JSON response containing exactly two fields:
-1. "summary": A highly descriptive and professional remarks note (max 3 sentences) evaluating the student. Focus on their best feature and their coding skills. Avoid emojis.
-2. "recommendedDomain": Recommend the single best category/domain for them to work on from their Selected Domains list based on their profile. This string MUST match exactly one of the options in their Selected Domains list: [${choices?.join(", ") || "None"}]. Do not make up a new category.
+1. "summary": A highly critical, descriptive, and professional evaluation (max 3 sentences) assessing the student. Be brutally honest about weaknesses and strengths. Avoid emojis.
+2. "recommendedDomain": Recommend the single best category/domain for them to work on from the list of ALL globally available domains: [${allGlobalChoices.join(", ")}]. This string MUST match exactly one of the options in that list. Select the absolute best fit based on their skills, regardless of whether it matches their personal choices or not.
 
 Return ONLY a valid JSON object. Do not include markdown code block formatting (like \`\`\`json).
 `;
@@ -129,12 +144,12 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
       summary = responseText;
     }
 
-    // Match recommendation strictly against the student's choices
+    // Match recommendation strictly against the global choices list
     let matchedDomain = "";
-    if (choices && choices.length > 0) {
+    if (allGlobalChoices && allGlobalChoices.length > 0) {
       const cleanRec = (recommendedDomain || "").toLowerCase().trim();
       if (cleanRec) {
-        const found = choices.find(
+        const found = allGlobalChoices.find(
           (c: string) =>
             c.toLowerCase().trim() === cleanRec ||
             cleanRec.includes(c.toLowerCase().trim()) ||
@@ -143,7 +158,7 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
         if (found) {
           matchedDomain = found;
         } else {
-          for (const choice of choices) {
+          for (const choice of allGlobalChoices) {
             const words = choice.toLowerCase().split(/\s+/);
             if (words.some((w: string) => w.length > 3 && cleanRec.includes(w))) {
               matchedDomain = choice;
@@ -153,7 +168,7 @@ Return ONLY a valid JSON object. Do not include markdown code block formatting (
         }
       }
       if (!matchedDomain) {
-        matchedDomain = choices[0];
+        matchedDomain = allGlobalChoices[0];
       }
     }
 
