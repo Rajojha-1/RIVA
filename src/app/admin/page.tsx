@@ -425,8 +425,15 @@ export default function AdminPage() {
 
   const domainStats = getDomainStats();
 
+  const directRequestsCount = studentRequests.filter(
+    (s) => s.requestedAdminId === adminUsername && s.status === "pending_admin_approval"
+  ).length;
+
   const filteredRequests = studentRequests.filter((req) => {
     if (selectedFilterDomain === "all") return true;
+    if (selectedFilterDomain === "direct") {
+      return req.requestedAdminId === adminUsername && req.status === "pending_admin_approval";
+    }
     return req.choices.includes(selectedFilterDomain);
   });
 
@@ -622,6 +629,19 @@ export default function AdminPage() {
               className={`${styles.sidebarLink} ${activeTab === "requests" ? styles.active : ""}`}
             >
               Student Pool ({studentRequests.length})
+              {directRequestsCount > 0 && (
+                <span style={{
+                  marginLeft: "0.5rem",
+                  backgroundColor: "#eab308",
+                  color: "#000",
+                  fontSize: "0.75rem",
+                  padding: "0.1rem 0.45rem",
+                  borderRadius: "0.75rem",
+                  fontWeight: 700
+                }}>
+                  {directRequestsCount} Direct
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab("assigned")}
@@ -655,14 +675,26 @@ export default function AdminPage() {
               
               {/* Domain Stats filter pills */}
               <div className={styles.filterSection}>
-                <span className={styles.filterTitle}>Filter by Domain Selection:</span>
+                <span className={styles.filterTitle}>Filter Requests:</span>
                 <div className={styles.filterGrid}>
                   <div
                     onClick={() => setSelectedFilterDomain("all")}
                     className={`${styles.filterPill} ${selectedFilterDomain === "all" ? styles.filterPillActive : ""}`}
                   >
-                    <span>All Domains</span>
+                    <span>All Requests</span>
                     <span className={styles.filterPillCount}>{studentRequests.length}</span>
+                  </div>
+                  <div
+                    onClick={() => setSelectedFilterDomain("direct")}
+                    className={`${styles.filterPill} ${selectedFilterDomain === "direct" ? styles.filterPillActive : ""}`}
+                    style={{
+                      border: "1px solid rgba(234, 179, 8, 0.5)",
+                      backgroundColor: selectedFilterDomain === "direct" ? "rgba(234, 179, 8, 0.25)" : undefined,
+                      color: selectedFilterDomain === "direct" ? "#facc15" : undefined
+                    }}
+                  >
+                    <span>📩 Requested You</span>
+                    <span className={styles.filterPillCount}>{directRequestsCount}</span>
                   </div>
                   {Object.entries(domainStats).map(([domain, count]) => (
                     <div
@@ -697,7 +729,23 @@ export default function AdminPage() {
                         <React.Fragment key={student.id}>
                           <tr>
                             <td>
-                              <strong>{student.name}</strong>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                <strong>{student.name}</strong>
+                                {student.requestedAdminId === adminUsername && student.status === "pending_admin_approval" && (
+                                  <span style={{
+                                    fontSize: "0.75rem",
+                                    backgroundColor: "rgba(234, 179, 8, 0.2)",
+                                    color: "#eab308",
+                                    border: "1px solid rgba(234, 179, 8, 0.5)",
+                                    padding: "0.15rem 0.5rem",
+                                    borderRadius: "1rem",
+                                    fontWeight: 600,
+                                    width: "fit-content"
+                                  }}>
+                                    📩 Requested You
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td>
                               {student.branch} (Sec {student.section})
