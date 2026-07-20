@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import styles from "./superadmin.module.css";
@@ -298,7 +298,23 @@ export default function SuperadminPage() {
     setActionSuccess("");
 
     try {
-      const adminId = newAdminUsername.trim();
+      const adminId = newAdminUsername.trim().toLowerCase();
+      
+      // 1. Check if the username already exists in admins
+      const adminDoc = await getDoc(doc(db, "admins", adminId));
+      if (adminDoc.exists()) {
+        setActionError(`Username "${adminId}" is already taken by an active admin.`);
+        return;
+      }
+
+      // 2. Check if the username is already requested in pending requests
+      const q = query(collection(db, "adminRequests"), where("username", "==", adminId), where("status", "==", "pending"));
+      const querySnap = await getDocs(q);
+      if (!querySnap.empty) {
+        setActionError(`Username "${adminId}" is already requested in a pending mentor request.`);
+        return;
+      }
+
       const adminRef = doc(db, "admins", adminId);
       await setDoc(adminRef, {
         username: newAdminUsername.trim(),
@@ -1017,23 +1033,35 @@ export default function SuperadminPage() {
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Branch</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CSE"
-                    className={styles.input}
+                  <select
+                    className={styles.selectSmall}
                     value={newAdminBranch}
                     onChange={(e) => setNewAdminBranch(e.target.value)}
-                  />
+                    style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                  >
+                    <option value="">Select Branch...</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Section</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. A"
-                    className={styles.input}
+                  <select
+                    className={styles.selectSmall}
                     value={newAdminSection}
                     onChange={(e) => setNewAdminSection(e.target.value)}
-                  />
+                    style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                  >
+                    <option value="">Select Section...</option>
+                    {["A", "B", "C", "D", "E", "F", "G"].map((sec) => (
+                      <option key={sec} value={sec}>
+                        Section {sec}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Category to Mentor</label>

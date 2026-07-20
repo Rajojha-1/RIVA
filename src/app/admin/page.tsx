@@ -58,6 +58,7 @@ export default function AdminPage() {
 
   // Dashboard Data
   const [choices, setChoices] = useState<Choice[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
   const [studentRequests, setStudentRequests] = useState<StudentRequest[]>([]);
   const [assignedStudents, setAssignedStudents] = useState<StudentRequest[]>([]);
   const [selectedFilterDomain, setSelectedFilterDomain] = useState<string>("all");
@@ -94,6 +95,18 @@ export default function AdminPage() {
     return () => unsubscribe();
   }, []);
 
+  // Monitor Branches from Firestore (independent of login for registration page)
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "branches"), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach((doc) => {
+        list.push({ id: doc.id, name: doc.data().name || doc.id });
+      });
+      setBranches(list);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError("");
@@ -117,6 +130,14 @@ export default function AdminPage() {
       const adminDoc = await getDoc(doc(db, "admins", targetUsername));
       if (adminDoc.exists()) {
         setRegError("Username is already taken by an active admin.");
+        return;
+      }
+
+      // 2. Check if the username is already requested in pending requests
+      const q = query(collection(db, "adminRequests"), where("username", "==", targetUsername), where("status", "==", "pending"));
+      const querySnap = await getDocs(q);
+      if (!querySnap.empty) {
+        setRegError("Username is already requested and pending review.");
         return;
       }
 
@@ -428,26 +449,38 @@ export default function AdminPage() {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>Branch</label>
-                <input
-                  type="text"
+                <select
                   required
-                  placeholder="e.g. CSE"
                   className={styles.input}
                   value={regBranch}
                   onChange={(e) => setRegBranch(e.target.value)}
-                />
+                  style={{ width: "100%", padding: "0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                >
+                  <option value="">Select Branch...</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>Section</label>
-                <input
-                  type="text"
+                <select
                   required
-                  placeholder="e.g. A"
                   className={styles.input}
                   value={regSection}
                   onChange={(e) => setRegSection(e.target.value)}
-                />
+                  style={{ width: "100%", padding: "0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                >
+                  <option value="">Select Section...</option>
+                  {["A", "B", "C", "D", "E", "F", "G"].map((sec) => (
+                    <option key={sec} value={sec}>
+                      Section {sec}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className={styles.formGroup}>
