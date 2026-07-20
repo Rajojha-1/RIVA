@@ -79,11 +79,13 @@ export default function AdminSelector({
     }
   };
 
-  // Filter admins to show only mentors assigned to student's choices
-  const mentorAdmins = admins.filter((adm) => {
-    if (!choices || choices.length === 0) return true; // fallback
-    if (!adm.mentorCategory) return false; // hide legacy non-mentors
-    return choices.includes(adm.mentorCategory);
+  // Allow users to choose from any admin, sorting domain matches first if available
+  const sortedAdmins = [...admins].sort((a, b) => {
+    const aMatch = choices && choices.length > 0 && choices.includes(a.mentorCategory || "");
+    const bMatch = choices && choices.length > 0 && choices.includes(b.mentorCategory || "");
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return (a.name || a.username).localeCompare(b.name || b.username);
   });
 
   const getStatusDisplay = () => {
@@ -118,11 +120,14 @@ export default function AdminSelector({
               onChange={(e) => setSelectedAdminId(e.target.value)}
             >
               <option value="">Select Admin</option>
-              {mentorAdmins.map((adm) => (
-                <option key={adm.id} value={adm.id}>
-                  {adm.name} ({adm.username}) - {adm.mentorCategory}
-                </option>
-              ))}
+              {sortedAdmins.map((adm) => {
+                const isMatch = choices && choices.length > 0 && choices.includes(adm.mentorCategory || "");
+                return (
+                  <option key={adm.id} value={adm.id}>
+                    {adm.name} ({adm.username}){adm.mentorCategory ? ` - ${adm.mentorCategory}` : ""}{isMatch ? " (Domain Match)" : ""}
+                  </option>
+                );
+              })}
             </select>
             <button
               onClick={handleSendRequest}
@@ -149,11 +154,14 @@ export default function AdminSelector({
             onChange={(e) => setSelectedAdminId(e.target.value)}
           >
             <option value="">Select Admin</option>
-            {mentorAdmins.map((adm) => (
-              <option key={adm.id} value={adm.id}>
-                {adm.name} ({adm.username}) - {adm.mentorCategory}
-              </option>
-            ))}
+            {sortedAdmins.map((adm) => {
+              const isMatch = choices && choices.length > 0 && choices.includes(adm.mentorCategory || "");
+              return (
+                <option key={adm.id} value={adm.id}>
+                  {adm.name} ({adm.username}){adm.mentorCategory ? ` - ${adm.mentorCategory}` : ""}{isMatch ? " (Domain Match)" : ""}
+                </option>
+              );
+            })}
           </select>
           <button
             onClick={handleSendRequest}
