@@ -184,6 +184,7 @@ export default function Home() {
               requestedAdminId={profile?.requestedAdminId}
               assignedAdminId={profile?.assignedAdminId}
               approvedDomain={profile?.approvedDomain}
+              choices={profile?.choices || []}
               onUpdate={() => {}} // Snapshot listener will update automatically
             />
           )}

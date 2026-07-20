@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { collection, doc, getDocs, setDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import styles from "./superadmin.module.css";
@@ -16,6 +16,21 @@ interface Admin {
   username: string;
   password?: string;
   name?: string;
+  branch?: string;
+  section?: string;
+  mentorCategory?: string;
+}
+
+interface AdminRequest {
+  id: string;
+  name: string;
+  branch: string;
+  section: string;
+  mentorCategory: string;
+  username: string;
+  password: string;
+  status: string;
+  timestamp: string;
 }
 
 interface Student {
@@ -59,6 +74,8 @@ export default function SuperadminPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
+  const [choices, setChoices] = useState<any[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
   const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
@@ -70,6 +87,9 @@ export default function SuperadminPage() {
   const [newAdminUsername, setNewAdminUsername] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
   const [newAdminName, setNewAdminName] = useState("");
+  const [newAdminBranch, setNewAdminBranch] = useState("");
+  const [newAdminSection, setNewAdminSection] = useState("");
+  const [newAdminCategory, setNewAdminCategory] = useState("");
 
   const [actionSuccess, setActionSuccess] = useState("");
   const [actionError, setActionError] = useState("");
@@ -105,9 +125,43 @@ export default function SuperadminPage() {
           username: doc.data().username,
           password: doc.data().password,
           name: doc.data().name || doc.data().username,
+          branch: doc.data().branch || "",
+          section: doc.data().section || "",
+          mentorCategory: doc.data().mentorCategory || "",
         });
       });
       setAdmins(list);
+    });
+
+    // Choices
+    const unsubChoices = onSnapshot(collection(db, "choices"), (snap) => {
+      const list: any[] = [];
+      snap.forEach((doc) => {
+        list.push({ id: doc.id, name: doc.data().name || doc.id });
+      });
+      setChoices(list);
+    });
+
+    // Admin Requests
+    const unsubAdminRequests = onSnapshot(collection(db, "adminRequests"), (snap) => {
+      const list: AdminRequest[] = [];
+      snap.forEach((doc) => {
+        const data = doc.data();
+        if (data.status === "pending") {
+          list.push({
+            id: doc.id,
+            name: data.name || "",
+            branch: data.branch || "",
+            section: data.section || "",
+            mentorCategory: data.mentorCategory || "",
+            username: data.username || "",
+            password: data.password || "",
+            status: data.status || "pending",
+            timestamp: data.timestamp || "",
+          });
+        }
+      });
+      setAdminRequests(list);
     });
 
     // Students
@@ -159,6 +213,8 @@ export default function SuperadminPage() {
     return () => {
       unsubBranches();
       unsubAdmins();
+      unsubChoices();
+      unsubAdminRequests();
       unsubStudents();
       unsubLogs();
     };
@@ -248,20 +304,107 @@ export default function SuperadminPage() {
         username: newAdminUsername.trim(),
         password: newAdminPassword.trim(),
         name: newAdminName.trim() || newAdminUsername.trim(),
+        branch: newAdminBranch.trim(),
+        section: newAdminSection.trim(),
+        mentorCategory: newAdminCategory,
       });
       await setDoc(doc(collection(db, "logs")), {
         actor: "superadmin",
         action: "Create Admin",
-        details: `Created admin account "${adminId}"`,
+        details: `Created admin account "${adminId}" for category "${newAdminCategory}"`,
         timestamp: new Date().toISOString(),
       });
       setNewAdminUsername("");
       setNewAdminPassword("");
       setNewAdminName("");
+      setNewAdminBranch("");
+      setNewAdminSection("");
+      setNewAdminCategory("");
       setActionSuccess(`Admin account "${adminId}" created successfully.`);
     } catch (err) {
       console.error(err);
       setActionError("Failed to create admin.");
+    }
+  };
+
+  const handleApproveAdminRequest = async (request: AdminRequest) => {
+    setActionError("");
+    setActionSuccess("");
+    try {
+      // 1. Confirm username is not taken in admins
+      const activeAdminDoc = await getDoc(doc(db, "admins", request.username));
+      if (activeAdminDoc.exists()) {
+        setActionError(`Username "${request.username}" is already taken by an active admin.`);
+        return;
+      }
+
+      // 2. Create active admin account
+      const adminRef = doc(db, "admins", request.username);
+      await setDoc(adminRef, {
+        username: request.username,
+        password: request.password,
+        name: request.name,
+        branch: request.branch,
+        section: request.section,
+        mentorCategory: request.mentorCategory,
+      });
+
+      // 3. Mark request as approved
+      const requestRef = doc(db, "adminRequests", request.id);
+      await updateDoc(requestRef, { status: "approved" });
+
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Approve Admin Request",
+        details: `Approved Admin Request for "${request.username}" as mentor of "${request.mentorCategory}"`,
+        timestamp: new Date().toISOString(),
+      });
+      setActionSuccess(`Admin request approved for "${request.username}".`);
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to approve admin request.");
+    }
+  };
+
+  const handleRejectAdminRequest = async (requestId: string, username: string) => {
+    const confirmReject = window.confirm(`Are you sure you want to reject the admin request for "${username}"?`);
+    if (!confirmReject) return;
+    setActionError("");
+    setActionSuccess("");
+    try {
+      const requestRef = doc(db, "adminRequests", requestId);
+      await updateDoc(requestRef, { status: "rejected" });
+
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Reject Admin Request",
+        details: `Rejected Admin Request for "${username}"`,
+        timestamp: new Date().toISOString(),
+      });
+      setActionSuccess(`Admin request for "${username}" rejected.`);
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to reject admin request.");
+    }
+  };
+
+  const handleUpdateAdminCategory = async (adminId: string, category: string) => {
+    setActionError("");
+    setActionSuccess("");
+    try {
+      const adminRef = doc(db, "admins", adminId);
+      await updateDoc(adminRef, { mentorCategory: category });
+
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Update Admin Category",
+        details: `Updated Admin "${adminId}" mentored category to "${category}"`,
+        timestamp: new Date().toISOString(),
+      });
+      setActionSuccess(`Updated category for Admin "${adminId}" to "${category}".`);
+    } catch (err) {
+      console.error(err);
+      setActionError("Failed to update admin category.");
     }
   };
 
@@ -782,6 +925,59 @@ export default function SuperadminPage() {
 
           {activeTab === "admins" && (
             <div className={styles.contentCard}>
+              {adminRequests.length > 0 && (
+                <div style={{ marginBottom: "2rem" }}>
+                  <h4 style={{ color: "var(--primary)", fontWeight: 600, fontSize: "0.95rem", marginBottom: "0.5rem" }}>
+                    Pending Mentor Access Requests ({adminRequests.length})
+                  </h4>
+                  <div className={styles.tableContainer}>
+                    <table className={styles.customTable}>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Branch / Section</th>
+                          <th>Mentor Category Choice</th>
+                          <th>Username</th>
+                          <th>Password</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {adminRequests.map((req) => (
+                          <tr key={req.id}>
+                            <td>{req.name}</td>
+                            <td>{req.branch} (Sec {req.section})</td>
+                            <td>
+                              <strong style={{ color: "var(--primary)" }}>{req.mentorCategory}</strong>
+                            </td>
+                            <td><code>{req.username}</code></td>
+                            <td><code>{req.password}</code></td>
+                            <td>
+                              <div style={{ display: "flex", gap: "0.25rem" }}>
+                                <button
+                                  onClick={() => handleApproveAdminRequest(req)}
+                                  className={styles.btnAction}
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleRejectAdminRequest(req.id, req.username)}
+                                  className={styles.btnReject}
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               <h3 className={styles.cardTitle}>Manage Admin Access Accounts</h3>
               <p className={styles.subtitle}>Create custom usernames and passwords for admins. Admins use these credentials to log in.</p>
 
@@ -819,7 +1015,43 @@ export default function SuperadminPage() {
                     onChange={(e) => setNewAdminPassword(e.target.value)}
                   />
                 </div>
-                <button type="submit" className={styles.btnCreateAdmin}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Branch</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CSE"
+                    className={styles.input}
+                    value={newAdminBranch}
+                    onChange={(e) => setNewAdminBranch(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Section</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. A"
+                    className={styles.input}
+                    value={newAdminSection}
+                    onChange={(e) => setNewAdminSection(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Category to Mentor</label>
+                  <select
+                    className={styles.selectSmall}
+                    value={newAdminCategory}
+                    onChange={(e) => setNewAdminCategory(e.target.value)}
+                    style={{ width: "100%", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                  >
+                    <option value="">Select Category...</option>
+                    {choices.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className={styles.btnCreateAdmin} style={{ gridColumn: "1 / -1", marginTop: "0.5rem" }}>
                   + Create Admin Account
                 </button>
               </form>
@@ -831,18 +1063,41 @@ export default function SuperadminPage() {
                       <th>Display Name</th>
                       <th>Admin Username</th>
                       <th>Admin Password</th>
+                      <th>Mentored Category</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {admins.map((adm) => (
                       <tr key={adm.id}>
-                        <td>{adm.name}</td>
+                        <td>
+                          {adm.name}{" "}
+                          {adm.branch && (
+                            <span className={styles.mutedText}>
+                              ({adm.branch} - Sec {adm.section})
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <strong>{adm.username}</strong>
                         </td>
                         <td>
                           <code>{adm.password}</code>
+                        </td>
+                        <td>
+                          <select
+                            value={adm.mentorCategory || ""}
+                            onChange={(e) => handleUpdateAdminCategory(adm.id, e.target.value)}
+                            className={styles.selectSmall}
+                            style={{ padding: "0.35rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                          >
+                            <option value="">No Category / Legacy</option>
+                            {choices.map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td>
                           <button
@@ -856,7 +1111,7 @@ export default function SuperadminPage() {
                     ))}
                     {admins.length === 0 && (
                       <tr>
-                        <td colSpan={4} className={styles.emptyText}>
+                        <td colSpan={5} className={styles.emptyText}>
                           No admin accounts created yet.
                         </td>
                       </tr>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, query, where, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, query, where, onSnapshot, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import styles from "./admin.module.css";
@@ -42,6 +42,17 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Registration States
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [regName, setRegName] = useState("");
+  const [regBranch, setRegBranch] = useState("");
+  const [regSection, setRegSection] = useState("");
+  const [regCategory, setRegCategory] = useState("");
+  const [regUsername, setRegUsername] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regSuccess, setRegSuccess] = useState("");
+  const [regError, setRegError] = useState("");
+
   // Active Tab
   const [activeTab, setActiveTab] = useState<"profile" | "choices" | "requests" | "assigned">("requests");
 
@@ -67,10 +78,8 @@ export default function AdminPage() {
     setLoading(false);
   }, []);
 
-  // Monitor Choices from Firestore
+  // Monitor Choices from Firestore (independent of login for registration page)
   useEffect(() => {
-    if (!isLoggedIn) return;
-
     const unsubscribe = onSnapshot(collection(db, "choices"), (snapshot) => {
       const list: Choice[] = [];
       snapshot.forEach((doc) => {
@@ -83,7 +92,58 @@ export default function AdminPage() {
       setChoices(list);
     });
     return () => unsubscribe();
-  }, [isLoggedIn]);
+  }, []);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    setRegSuccess("");
+
+    if (
+      !regName.trim() ||
+      !regBranch.trim() ||
+      !regSection.trim() ||
+      !regCategory ||
+      !regUsername.trim() ||
+      !regPassword.trim()
+    ) {
+      setRegError("Please fill in all registration fields.");
+      return;
+    }
+
+    try {
+      const targetUsername = regUsername.trim().toLowerCase();
+      // 1. Check if the username already exists in admins
+      const adminDoc = await getDoc(doc(db, "admins", targetUsername));
+      if (adminDoc.exists()) {
+        setRegError("Username is already taken by an active admin.");
+        return;
+      }
+
+      // 2. Add to adminRequests
+      await addDoc(collection(db, "adminRequests"), {
+        name: regName.trim(),
+        branch: regBranch.trim(),
+        section: regSection.trim(),
+        mentorCategory: regCategory,
+        username: targetUsername,
+        password: regPassword.trim(),
+        status: "pending",
+        timestamp: new Date().toISOString(),
+      });
+
+      setRegSuccess("Your registration request was submitted successfully! Superadmin will verify and create your credentials.");
+      setRegName("");
+      setRegBranch("");
+      setRegSection("");
+      setRegCategory("");
+      setRegUsername("");
+      setRegPassword("");
+    } catch (err) {
+      console.error("Registration request error:", err);
+      setRegError("Failed to submit registration request.");
+    }
+  };
 
   // Monitor Requests & Assigned Students
   useEffect(() => {
@@ -329,35 +389,152 @@ export default function AdminPage() {
       <div className={styles.authWrapper}>
         <Navbar />
         <div className={styles.authContainer}>
-          <form onSubmit={handleLogin} className={styles.authCard}>
-            <h2 className={styles.title}>Admin Access</h2>
-            {loginError && <div className={styles.errorMessage}>{loginError}</div>}
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Admin Username</label>
-              <input
-                type="text"
-                required
-                className={styles.input}
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="Enter admin username"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Password</label>
-              <input
-                type="password"
-                required
-                className={styles.input}
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="Enter password"
-              />
-            </div>
-            <button type="submit" className={styles.submitBtn}>
-              Log In
-            </button>
-          </form>
+          {isRegistering ? (
+            <form onSubmit={handleRegister} className={styles.authCard}>
+              <h2 className={styles.title}>Request Mentor Access</h2>
+              <p className={styles.subtitle} style={{ marginBottom: "1rem" }}>Submit details to be verified by Superadmin.</p>
+              {regError && <div className={styles.errorMessage}>{regError}</div>}
+              {regSuccess && <div className={styles.successMessage} style={{ color: "#10b981", fontSize: "0.85rem", marginBottom: "1rem", backgroundColor: "#ecfdf5", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid #a7f3d0" }}>{regSuccess}</div>}
+              
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Display Name / Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. Preeti"
+                  className={styles.input}
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <div className={styles.formGroup} style={{ flex: "1 1 120px" }}>
+                  <label className={styles.label}>Branch</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. CSE"
+                    className={styles.input}
+                    value={regBranch}
+                    onChange={(e) => setRegBranch(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup} style={{ flex: "1 1 120px" }}>
+                  <label className={styles.label}>Section</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. A"
+                    className={styles.input}
+                    value={regSection}
+                    onChange={(e) => setRegSection(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Category to Mentor</label>
+                <select
+                  required
+                  className={styles.input}
+                  value={regCategory}
+                  onChange={(e) => setRegCategory(e.target.value)}
+                  style={{ width: "100%", padding: "0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
+                >
+                  <option value="">Select Category...</option>
+                  {choices.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Requested Username</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter login username"
+                  className={styles.input}
+                  value={regUsername}
+                  onChange={(e) => setRegUsername(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Requested Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter login password"
+                  className={styles.input}
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" className={styles.submitBtn}>
+                Submit Request
+              </button>
+
+              <button
+                type="button"
+                className={styles.btnReject}
+                style={{ marginTop: "0.5rem", width: "100%" }}
+                onClick={() => {
+                  setIsRegistering(false);
+                  setRegError("");
+                  setRegSuccess("");
+                }}
+              >
+                Back to Login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin} className={styles.authCard}>
+              <h2 className={styles.title}>Admin Access</h2>
+              {loginError && <div className={styles.errorMessage}>{loginError}</div>}
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Admin Username</label>
+                <input
+                  type="text"
+                  required
+                  className={styles.input}
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  placeholder="Enter admin username"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Password</label>
+                <input
+                  type="password"
+                  required
+                  className={styles.input}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter password"
+                />
+              </div>
+              <button type="submit" className={styles.submitBtn}>
+                Log In
+              </button>
+
+              <button
+                type="button"
+                className={styles.btnAccept}
+                style={{ marginTop: "0.5rem", width: "100%", backgroundColor: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                onClick={() => {
+                  setIsRegistering(true);
+                  setLoginError("");
+                }}
+              >
+                Register as Admin / Request Mentor Access
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );

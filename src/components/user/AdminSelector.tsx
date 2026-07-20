@@ -9,6 +9,7 @@ interface Admin {
   id: string;
   username: string;
   name?: string;
+  mentorCategory?: string;
 }
 
 interface AdminSelectorProps {
@@ -17,6 +18,7 @@ interface AdminSelectorProps {
   requestedAdminId?: string;
   assignedAdminId?: string;
   approvedDomain?: string;
+  choices?: string[];
   onUpdate: () => void;
 }
 
@@ -26,6 +28,7 @@ export default function AdminSelector({
   requestedAdminId,
   assignedAdminId,
   approvedDomain,
+  choices = [],
   onUpdate,
 }: AdminSelectorProps) {
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -45,6 +48,7 @@ export default function AdminSelector({
             id: doc.id,
             username: data.username,
             name: data.name || data.username,
+            mentorCategory: data.mentorCategory || "",
           });
         });
         setAdmins(adminList);
@@ -63,17 +67,24 @@ export default function AdminSelector({
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
-        requestedAdminId: selectedAdminId,
         status: "pending_admin_approval",
+        requestedAdminId: selectedAdminId,
       });
       onUpdate();
     } catch (err) {
-      console.error("Error sending admin request:", err);
-      setError("Failed to send request. Please try again.");
+      console.error(err);
+      setError("Failed to request admin.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter admins to show only mentors assigned to student's choices
+  const mentorAdmins = admins.filter((adm) => {
+    if (!choices || choices.length === 0) return true; // fallback
+    if (!adm.mentorCategory) return false; // hide legacy non-mentors
+    return choices.includes(adm.mentorCategory);
+  });
 
   const getStatusDisplay = () => {
     if (status === "approved" && assignedAdminId) {
@@ -107,9 +118,9 @@ export default function AdminSelector({
               onChange={(e) => setSelectedAdminId(e.target.value)}
             >
               <option value="">Select Admin</option>
-              {admins.map((adm) => (
+              {mentorAdmins.map((adm) => (
                 <option key={adm.id} value={adm.id}>
-                  {adm.name} ({adm.username})
+                  {adm.name} ({adm.username}) - {adm.mentorCategory}
                 </option>
               ))}
             </select>
@@ -138,9 +149,9 @@ export default function AdminSelector({
             onChange={(e) => setSelectedAdminId(e.target.value)}
           >
             <option value="">Select Admin</option>
-            {admins.map((adm) => (
+            {mentorAdmins.map((adm) => (
               <option key={adm.id} value={adm.id}>
-                {adm.name} ({adm.username})
+                {adm.name} ({adm.username}) - {adm.mentorCategory}
               </option>
             ))}
           </select>
