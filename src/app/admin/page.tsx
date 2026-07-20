@@ -59,6 +59,7 @@ export default function AdminPage() {
   // Dashboard Data
   const [choices, setChoices] = useState<Choice[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [adminsList, setAdminsList] = useState<any[]>([]);
   const [studentRequests, setStudentRequests] = useState<StudentRequest[]>([]);
   const [assignedStudents, setAssignedStudents] = useState<StudentRequest[]>([]);
   const [selectedFilterDomain, setSelectedFilterDomain] = useState<string>("all");
@@ -103,6 +104,23 @@ export default function AdminPage() {
         list.push({ id: doc.id, name: doc.data().name || doc.id });
       });
       setBranches(list);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Monitor Admins from Firestore (independent of login for registration page)
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "admins"), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        list.push({
+          id: doc.id,
+          username: data.username,
+          mentorCategory: data.mentorCategory || "",
+        });
+      });
+      setAdminsList(list);
     });
     return () => unsubscribe();
   }, []);
@@ -455,11 +473,14 @@ export default function AdminPage() {
                   style={{ width: "100%", padding: "0.65rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
                 >
                   <option value="">Select Category...</option>
-                  {choices.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {choices.map((c) => {
+                    const isTaken = adminsList.some((adm) => adm.mentorCategory === c.name);
+                    return (
+                      <option key={c.id} value={c.name} disabled={isTaken}>
+                        {c.name} {isTaken ? " (Already Mentored)" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
