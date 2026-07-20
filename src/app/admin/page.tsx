@@ -401,7 +401,7 @@ export default function AdminPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dr"
+                  placeholder="e.g. Admin"
                   className={styles.input}
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
