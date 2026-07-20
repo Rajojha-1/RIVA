@@ -752,11 +752,14 @@ export default function AdminPage() {
                                   style={{ padding: "0.35rem", borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--input)", color: "var(--foreground)" }}
                                 >
                                   <option value="" disabled>Accept for Domain...</option>
-                                  {student.choices.map((c) => (
-                                    <option key={c} value={c}>
-                                      {c}
-                                    </option>
-                                  ))}
+                                  {choices.map((c) => {
+                                    const isChosen = student.choices.includes(c.name);
+                                    return (
+                                      <option key={c.id} value={c.name}>
+                                        {c.name} {isChosen ? "★ (Chosen)" : ""}
+                                      </option>
+                                    );
+                                  })}
                                 </select>
                                 <button
                                   onClick={() => handleRejectRequest(student.id)}

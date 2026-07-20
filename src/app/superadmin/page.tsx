@@ -861,11 +861,14 @@ export default function SuperadminPage() {
                                   className={styles.selectSmall}
                                 >
                                   <option value="" disabled>Select Domain...</option>
-                                  {s.choices.map((choice) => (
-                                    <option key={choice} value={choice}>
-                                      {choice}
-                                    </option>
-                                  ))}
+                                  {choices.map((c) => {
+                                    const isChosen = s.choices.includes(c.name);
+                                    return (
+                                      <option key={c.id} value={c.name}>
+                                        {c.name} {isChosen ? "★ (Chosen)" : ""}
+                                      </option>
+                                    );
+                                  })}
                                 </select>
                               )}
 
