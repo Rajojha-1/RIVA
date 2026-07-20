@@ -81,6 +81,7 @@ export default function SuperadminPage() {
   const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
   const [tempAdminMap, setTempAdminMap] = useState<{[studentId: string]: string}>({});
   const [tempDomainMap, setTempDomainMap] = useState<{[studentId: string]: string}>({});
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
 
   // Input States
   const [newBranchName, setNewBranchName] = useState("");
@@ -210,6 +211,15 @@ export default function SuperadminPage() {
       setLogs(list);
     });
 
+    // Registration Settings
+    const unsubSettings = onSnapshot(doc(db, "settings", "registration"), (snap) => {
+      if (snap.exists()) {
+        setIsRegistrationOpen(snap.data().isRegistrationOpen !== false);
+      } else {
+        setIsRegistrationOpen(true);
+      }
+    });
+
     return () => {
       unsubBranches();
       unsubAdmins();
@@ -217,8 +227,33 @@ export default function SuperadminPage() {
       unsubAdminRequests();
       unsubStudents();
       unsubLogs();
+      unsubSettings();
     };
   }, [isAuthorized]);
+
+  const handleToggleRegistration = async () => {
+    const nextState = !isRegistrationOpen;
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await setDoc(doc(db, "settings", "registration"), {
+        isRegistrationOpen: nextState,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "superadmin",
+      }, { merge: true });
+
+      await setDoc(doc(collection(db, "logs")), {
+        actor: "superadmin",
+        action: "Toggle Registration Status",
+        details: `Changed student registration status to ${nextState ? "OPEN" : "CLOSED"}`,
+        timestamp: new Date().toISOString(),
+      });
+      setActionSuccess(`Student registrations are now ${nextState ? "OPEN" : "CLOSED"}.`);
+    } catch (err) {
+      console.error("Failed to update registration status:", err);
+      setActionError("Failed to update registration status.");
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -666,6 +701,51 @@ export default function SuperadminPage() {
 
         {/* Main Content Area */}
         <main className={styles.mainContent}>
+          {/* Registration Control Banner */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "1.25rem 1.5rem",
+            marginBottom: "1.5rem",
+            backgroundColor: "var(--card-bg, #1e1e24)",
+            borderRadius: "0.75rem",
+            border: isRegistrationOpen ? "1px solid rgba(34, 197, 94, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          }}>
+            <div>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600", color: "var(--foreground)" }}>
+                Student Registration Portal:{" "}
+                <span style={{ color: isRegistrationOpen ? "#22c55e" : "#ef4444", fontWeight: "700" }}>
+                  {isRegistrationOpen ? "OPEN (Accepting New Signups)" : "CLOSED (New Signups Blocked)"}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.3rem", color: "var(--muted-foreground)" }}>
+                {isRegistrationOpen
+                  ? "New students can sign up with Google. Existing students & admins can sign in."
+                  : "New student signups are blocked. Existing registered students, admin logins, and admin registration requests remain active."}
+              </div>
+            </div>
+            <button
+              onClick={handleToggleRegistration}
+              style={{
+                padding: "0.6rem 1.25rem",
+                borderRadius: "0.5rem",
+                fontWeight: "600",
+                cursor: "pointer",
+                border: "none",
+                backgroundColor: isRegistrationOpen ? "#ef4444" : "#22c55e",
+                color: "#ffffff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                transition: "all 0.2s ease",
+                whiteSpace: "nowrap",
+                marginLeft: "1rem",
+              }}
+            >
+              {isRegistrationOpen ? "Close New Signups" : "Open New Signups"}
+            </button>
+          </div>
+
           {actionSuccess && <div className={styles.successMessage}>{actionSuccess}</div>}
           {actionError && <div className={styles.errorMessage}>{actionError}</div>}
 
