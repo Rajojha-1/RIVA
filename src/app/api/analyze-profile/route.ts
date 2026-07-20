@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenerativeAI(apiKey);
-    const model = ai.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = ai.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
     const prompt = `
 Analyze the following student profile details to provide a summary evaluation and recommend the absolute best category choice for recruitment:
