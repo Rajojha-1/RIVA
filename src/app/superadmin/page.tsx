@@ -212,13 +212,20 @@ export default function SuperadminPage() {
     });
 
     // Registration Settings
-    const unsubSettings = onSnapshot(doc(db, "settings", "registration"), (snap) => {
-      if (snap.exists()) {
-        setIsRegistrationOpen(snap.data().isRegistrationOpen !== false);
-      } else {
+    const unsubSettings = onSnapshot(
+      doc(db, "settings", "registration"),
+      (snap) => {
+        if (snap.exists()) {
+          setIsRegistrationOpen(snap.data().isRegistrationOpen !== false);
+        } else {
+          setIsRegistrationOpen(true);
+        }
+      },
+      (err) => {
+        console.warn("Settings fetch warning:", err.message);
         setIsRegistrationOpen(true);
       }
-    });
+    );
 
     return () => {
       unsubBranches();

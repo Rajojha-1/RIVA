@@ -18,13 +18,21 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
 
   // Monitor real-time registration open/closed status
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "settings", "registration"), (docSnap) => {
-      if (docSnap.exists()) {
-        setIsRegistrationOpen(docSnap.data().isRegistrationOpen !== false);
-      } else {
+    const unsubscribe = onSnapshot(
+      doc(db, "settings", "registration"),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setIsRegistrationOpen(docSnap.data().isRegistrationOpen !== false);
+        } else {
+          setIsRegistrationOpen(true);
+        }
+      },
+      (err) => {
+        console.warn("Settings snapshot listener warning:", err.message);
+        // Default to registration open if rules are not updated yet
         setIsRegistrationOpen(true);
       }
-    });
+    );
     return () => unsubscribe();
   }, []);
 
