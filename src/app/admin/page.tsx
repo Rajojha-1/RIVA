@@ -390,47 +390,22 @@ export default function AdminPage() {
         <Navbar />
         <div className={styles.authContainer}>
           {isRegistering ? (
-            <form onSubmit={handleRegister} className={styles.authCard}>
-              <h2 className={styles.title}>Request Mentor Access</h2>
-              <p className={styles.subtitle} style={{ marginBottom: "1rem" }}>Submit details to be verified by Superadmin.</p>
-              {regError && <div className={styles.errorMessage}>{regError}</div>}
-              {regSuccess && <div className={styles.successMessage} style={{ color: "#10b981", fontSize: "0.85rem", marginBottom: "1rem", backgroundColor: "#ecfdf5", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid #a7f3d0" }}>{regSuccess}</div>}
+            <form onSubmit={handleRegister} className={`${styles.authCard} ${styles.authCardWide}`}>
+              <h2 className={styles.title} style={{ gridColumn: "span 2" }}>Request Mentor Access</h2>
+              <p className={styles.subtitle} style={{ marginBottom: "0.5rem", gridColumn: "span 2", textAlign: "center" }}>Submit details to be verified by Superadmin.</p>
+              {regError && <div className={styles.errorMessage} style={{ gridColumn: "span 2" }}>{regError}</div>}
+              {regSuccess && <div className={styles.successMessage} style={{ gridColumn: "span 2", color: "#10b981", fontSize: "0.85rem", marginBottom: "0.5rem", backgroundColor: "#ecfdf5", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid #a7f3d0" }}>{regSuccess}</div>}
               
               <div className={styles.formGroup}>
                 <label className={styles.label}>Display Name / Full Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dr. Preeti"
+                  placeholder="e.g. Dr"
                   className={styles.input}
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                 />
-              </div>
-
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                <div className={styles.formGroup} style={{ flex: "1 1 120px" }}>
-                  <label className={styles.label}>Branch</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. CSE"
-                    className={styles.input}
-                    value={regBranch}
-                    onChange={(e) => setRegBranch(e.target.value)}
-                  />
-                </div>
-                <div className={styles.formGroup} style={{ flex: "1 1 120px" }}>
-                  <label className={styles.label}>Section</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. A"
-                    className={styles.input}
-                    value={regSection}
-                    onChange={(e) => setRegSection(e.target.value)}
-                  />
-                </div>
               </div>
 
               <div className={styles.formGroup}>
@@ -449,6 +424,30 @@ export default function AdminPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Branch</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. CSE"
+                  className={styles.input}
+                  value={regBranch}
+                  onChange={(e) => setRegBranch(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Section</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. A"
+                  className={styles.input}
+                  value={regSection}
+                  onChange={(e) => setRegSection(e.target.value)}
+                />
               </div>
 
               <div className={styles.formGroup}>
@@ -475,14 +474,14 @@ export default function AdminPage() {
                 />
               </div>
 
-              <button type="submit" className={styles.submitBtn}>
+              <button type="submit" className={styles.submitBtn} style={{ gridColumn: "span 2", marginTop: "0.5rem" }}>
                 Submit Request
               </button>
 
               <button
                 type="button"
                 className={styles.btnReject}
-                style={{ marginTop: "0.5rem", width: "100%" }}
+                style={{ gridColumn: "span 2", marginTop: "0.5rem", width: "100%" }}
                 onClick={() => {
                   setIsRegistering(false);
                   setRegError("");
