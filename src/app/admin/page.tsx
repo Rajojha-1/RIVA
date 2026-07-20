@@ -141,6 +141,22 @@ export default function AdminPage() {
         return;
       }
 
+      // 3. Check if this category already has an active mentor
+      const activeMentorQuery = query(collection(db, "admins"), where("mentorCategory", "==", regCategory));
+      const activeMentorSnap = await getDocs(activeMentorQuery);
+      if (!activeMentorSnap.empty) {
+        setRegError(`A mentor is already active for the category "${regCategory}".`);
+        return;
+      }
+
+      // 4. Check if this category is already requested by another pending mentor
+      const pendingCategoryQuery = query(collection(db, "adminRequests"), where("mentorCategory", "==", regCategory), where("status", "==", "pending"));
+      const pendingCategorySnap = await getDocs(pendingCategoryQuery);
+      if (!pendingCategorySnap.empty) {
+        setRegError(`A registration request for "${regCategory}" is already pending review.`);
+        return;
+      }
+
       // 2. Add to adminRequests
       await addDoc(collection(db, "adminRequests"), {
         name: regName.trim(),
