@@ -220,10 +220,24 @@
     min-height: 100dvh;
     overflow-y: auto;
   }
+  /* When chat tab is active, lock the viewport height */
+  .appContainer:has(.chatMainContent) {
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
   .mainLayout {
     flex-direction: column;
     overflow: visible;
     height: auto;
+  }
+  .appContainer:has(.chatMainContent) .mainLayout {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    height: auto !important;
   }
   .sidebar {
     width: 100%;
@@ -255,11 +269,10 @@
     padding: 0 !important;
     gap: 0 !important;
     overflow: hidden !important;
-    height: calc(100dvh - 56px) !important;
-    min-height: calc(100dvh - 56px) !important;
+    flex: 1 !important;
+    min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    flex: 1 !important;
   }
 }
 
