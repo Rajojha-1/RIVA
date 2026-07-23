@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
+import WhatsAppChat from "@/components/chat/WhatsAppChat";
 import styles from "./superadmin.module.css";
 
 interface Branch {
@@ -61,6 +62,8 @@ interface ActivityLog {
   timestamp: string;
 }
 
+type SuperAdminTab = "verification" | "assign" | "branches" | "admins" | "logs" | "chat";
+
 export default function SuperadminPage() {
   const [passcode, setPasscode] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -68,7 +71,7 @@ export default function SuperadminPage() {
   const [loading, setLoading] = useState(true);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"verification" | "assign" | "branches" | "admins" | "logs">("verification");
+  const [activeTab, setActiveTab] = useState<SuperAdminTab>("verification");
 
   // Data State
   const [students, setStudents] = useState<Student[]>([]);
@@ -667,47 +670,82 @@ export default function SuperadminPage() {
 
   return (
     <div className={styles.appContainer}>
-      <Navbar role="superadmin" onLogout={handleLogout} />
-      <div className={styles.mainLayout}>
-        {/* Left Side Panel */}
-        <aside className={styles.sidebar}>
-          <h3 className={styles.sidebarTitle}>Superadmin Control</h3>
-          <div className={styles.sidebarNav}>
-            <button
-              onClick={() => setActiveTab("verification")}
-              className={`${styles.sidebarLink} ${activeTab === "verification" ? styles.active : ""}`}
-            >
-              Student Verification ({pendingVerificationStudents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("assign")}
-              className={`${styles.sidebarLink} ${activeTab === "assign" ? styles.active : ""}`}
-            >
-              Student & Admin Mapping ({students.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("branches")}
-              className={`${styles.sidebarLink} ${activeTab === "branches" ? styles.active : ""}`}
-            >
-              Manage Branches ({branches.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("admins")}
-              className={`${styles.sidebarLink} ${activeTab === "admins" ? styles.active : ""}`}
-            >
-              Manage Admins ({admins.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("logs")}
-              className={`${styles.sidebarLink} ${activeTab === "logs" ? styles.active : ""}`}
-            >
-              Activity Logs ({logs.length})
-            </button>
-          </div>
-        </aside>
+      <Navbar
+        userEmail="Superadmin"
+        role="superadmin"
+        activeTab={activeTab === "chat" ? "chat" : "dashboard"}
+        onTabChange={(tab) => setActiveTab(tab === "chat" ? "chat" : "verification")}
+        onLogout={handleLogout}
+      />
+      {activeTab === "chat" ? (
+        <WhatsAppChat
+          currentUser={{
+            uid: "superadmin",
+            displayName: "Superadmin",
+            email: "superadmin@riva.com",
+            role: "superadmin",
+          }}
+        />
+      ) : (
+        <div className={styles.mainLayout}>
+          {/* Left Side Panel */}
+          <aside className={styles.sidebar}>
+            <h3 className={styles.sidebarTitle}>Superadmin Control</h3>
+            <div className={styles.sidebarNav}>
+              <button
+                onClick={() => setActiveTab("verification")}
+                className={`${styles.sidebarLink} ${
+                  activeTab === "verification" ? styles.active : ""
+                }`}
+              >
+                Student Verification ({pendingVerificationStudents.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("assign")}
+                className={`${styles.sidebarLink} ${
+                  activeTab === "assign" ? styles.active : ""
+                }`}
+              >
+                Student & Admin Mapping ({students.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("branches")}
+                className={`${styles.sidebarLink} ${
+                  activeTab === "branches" ? styles.active : ""
+                }`}
+              >
+                Manage Branches ({branches.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("admins")}
+                className={`${styles.sidebarLink} ${
+                  activeTab === "admins" ? styles.active : ""
+                }`}
+              >
+                Manage Admins ({admins.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("logs")}
+                className={`${styles.sidebarLink} ${
+                  activeTab === "logs" ? styles.active : ""
+                }`}
+              >
+                Activity Logs ({logs.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("chat")}
+                className={`${styles.sidebarLink} ${
+                  (activeTab as string) === "chat" ? styles.active : ""
+                }`}
+                style={{ color: "#00a884", fontWeight: 700 }}
+              >
+                💬 WhatsApp Chat
+              </button>
+            </div>
+          </aside>
 
-        {/* Main Content Area */}
-        <main className={styles.mainContent}>
+          {/* Main Content Area */}
+          <main className={styles.mainContent}>
           {/* Registration Control Banner */}
           <div style={{
             display: "flex",
@@ -1287,6 +1325,7 @@ export default function SuperadminPage() {
           )}
         </main>
       </div>
+      )}
     </div>
   );
 }

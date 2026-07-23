@@ -10,6 +10,7 @@ import SidebarSummary from "@/components/user/SidebarSummary";
 import ProfileForm from "@/components/user/ProfileForm";
 import ChoiceSelector from "@/components/user/ChoiceSelector";
 import AdminSelector from "@/components/user/AdminSelector";
+import WhatsAppChat from "@/components/chat/WhatsAppChat";
 import styles from "./page.module.css";
 
 interface UserProfile {
@@ -34,6 +35,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "chat">("dashboard");
 
   // Monitor Auth State
   useEffect(() => {
@@ -96,100 +98,142 @@ export default function Home() {
 
   return (
     <div className={styles.appContainer}>
-      <Navbar userEmail={user.email} />
-      <div className={styles.mainLayout}>
-        {/* Left Side Panel */}
-        <aside className={styles.sidebar}>
-          <SidebarSummary profile={profile} />
-        </aside>
+      <Navbar
+        userEmail={user.email}
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab)}
+      />
+      {activeTab === "chat" ? (
+        <WhatsAppChat
+          currentUser={{
+            uid: user.uid,
+            displayName: profile?.name || user.email?.split("@")[0] || "Student",
+            email: user.email || "",
+            role: "user",
+          }}
+        />
+      ) : (
+        <div className={styles.mainLayout}>
+          {/* Left Side Panel */}
+          <aside className={styles.sidebar}>
+            <SidebarSummary profile={profile} />
+          </aside>
 
-        {/* Main Content Area */}
-        <main className={styles.mainContent}>
-          {!hasFilledProfile && (
-            <ProfileForm
-              userId={user.uid}
-              userEmail={user.email || ""}
-              initialData={profile}
-              onSave={(data) => setProfile((prev) => ({ ...prev, ...data }))}
-            />
-          )}
+          {/* Main Content Area */}
+          <main className={styles.mainContent}>
+            {!hasFilledProfile && (
+              <ProfileForm
+                userId={user.uid}
+                userEmail={user.email || ""}
+                initialData={profile}
+                onSave={(data) => setProfile((prev) => ({ ...prev, ...data }))}
+              />
+            )}
 
-          {hasFilledProfile && !hasSelectedChoices && (
-            <ChoiceSelector
-              userId={user.uid}
-              initialChoices={profile?.choices || []}
-              onSave={(choices) => setProfile((prev) => prev ? { ...prev, choices } : null)}
-            />
-          )}
+            {hasFilledProfile && !hasSelectedChoices && (
+              <ChoiceSelector
+                userId={user.uid}
+                initialChoices={profile?.choices || []}
+                onSave={(choices) =>
+                  setProfile((prev) => (prev ? { ...prev, choices } : null))
+                }
+              />
+            )}
 
-          {hasFilledProfile && hasSelectedChoices && !isVerified && (
-            <div className={styles.pendingVerificationCard}>
-              {profile?.status === "rejected" ? (
-                <>
-                  <h3 style={{ color: "var(--destructive)" }}>Verification Rejected</h3>
-                  <p>
-                    Your profile details were reviewed and rejected by the Superadmin.
-                  </p>
-                  {profile.remarks && (
-                    <div style={{ margin: "1rem 0", padding: "1rem", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius)", borderLeft: "4px solid var(--destructive)" }}>
-                      <strong>Feedback Remarks:</strong> "{profile.remarks}"
-                    </div>
-                  )}
-                  <button 
-                    onClick={() => {
-                      const userRef = doc(db, "users", user.uid);
-                      import("firebase/firestore").then(({ updateDoc }) => {
-                        updateDoc(userRef, { status: "draft" });
-                      });
-                    }}
-                    className={styles.editBtn}
-                  >
-                    Edit Profile & Selections
-                  </button>
-                </>
-              ) : (
-                <>
-                  <h3>Verification Pending</h3>
-                  <p>
-                    You have successfully saved your profile details and selections. Your profile is now under review by the Superadmin.
-                  </p>
-                  <div className={styles.statusBadge}>Status: Pending Verification</div>
-                  {profile?.remarks && (
-                    <div style={{ margin: "1rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
-                      <strong>Latest Superadmin Note:</strong> "{profile.remarks}"
-                    </div>
-                  )}
-                  <button 
-                    onClick={() => {
-                      if (confirm("Would you like to edit your choices or profile? This will reset verification status.")) {
+            {hasFilledProfile && hasSelectedChoices && !isVerified && (
+              <div className={styles.pendingVerificationCard}>
+                {profile?.status === "rejected" ? (
+                  <>
+                    <h3 style={{ color: "var(--destructive)" }}>
+                      Verification Rejected
+                    </h3>
+                    <p>
+                      Your profile details were reviewed and rejected by the
+                      Superadmin.
+                    </p>
+                    {profile.remarks && (
+                      <div
+                        style={{
+                          margin: "1rem 0",
+                          padding: "1rem",
+                          backgroundColor: "rgba(239, 68, 68, 0.1)",
+                          borderRadius: "var(--radius)",
+                          borderLeft: "4px solid var(--destructive)",
+                        }}
+                      >
+                        <strong>Feedback Remarks:</strong> "{profile.remarks}"
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
                         const userRef = doc(db, "users", user.uid);
                         import("firebase/firestore").then(({ updateDoc }) => {
-                          updateDoc(userRef, { status: "draft", choices: [] });
+                          updateDoc(userRef, { status: "draft" });
                         });
-                      }
-                    }}
-                    className={styles.editBtn}
-                  >
-                    Edit Selections
-                  </button>
-                </>
-              )}
-            </div>
-          )}
+                      }}
+                      className={styles.editBtn}
+                    >
+                      Edit Profile & Selections
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3>Verification Pending</h3>
+                    <p>
+                      You have successfully saved your profile details and
+                      selections. Your profile is now under review by the
+                      Superadmin.
+                    </p>
+                    <div className={styles.statusBadge}>
+                      Status: Pending Verification
+                    </div>
+                    {profile?.remarks && (
+                      <div
+                        style={{
+                          margin: "1rem 0",
+                          fontSize: "0.85rem",
+                          opacity: 0.8,
+                        }}
+                      >
+                        <strong>Latest Superadmin Note:</strong> "{profile.remarks}"
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "Would you like to edit your choices or profile? This will reset verification status."
+                          )
+                        ) {
+                          const userRef = doc(db, "users", user.uid);
+                          import("firebase/firestore").then(({ updateDoc }) => {
+                            updateDoc(userRef, { status: "draft", choices: [] });
+                          });
+                        }
+                      }}
+                      className={styles.editBtn}
+                    >
+                      Edit Selections
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
-          {hasFilledProfile && hasSelectedChoices && isVerified && (
-            <AdminSelector
-              userId={user.uid}
-              status={profile?.status || "verified"}
-              requestedAdminId={profile?.requestedAdminId}
-              assignedAdminId={profile?.assignedAdminId}
-              approvedDomain={profile?.approvedDomain}
-              choices={profile?.choices || []}
-              onUpdate={() => {}} // Snapshot listener will update automatically
-            />
-          )}
-        </main>
-      </div>
+            {hasFilledProfile && hasSelectedChoices && isVerified && (
+              <AdminSelector
+                userId={user.uid}
+                status={profile?.status || "verified"}
+                requestedAdminId={profile?.requestedAdminId}
+                assignedAdminId={profile?.assignedAdminId}
+                approvedDomain={profile?.approvedDomain}
+                choices={profile?.choices || []}
+                onUpdate={() => {}} // Snapshot listener will update automatically
+              />
+            )}
+          </main>
+        </div>
+      )}
     </div>
   );
 }
