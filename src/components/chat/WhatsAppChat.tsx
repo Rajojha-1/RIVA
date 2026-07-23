@@ -30,40 +30,10 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileChat, setShowMobileChat] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Handle mobile virtual keyboard resize & lock outer page scroll
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const updateViewport = () => {
-      if (window.visualViewport) {
-        setViewportHeight(window.visualViewport.height);
-      }
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", updateViewport);
-      window.visualViewport.addEventListener("scroll", updateViewport);
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", updateViewport);
-        window.visualViewport.removeEventListener("scroll", updateViewport);
-      }
-    };
-  }, []);
-
   const handleInputFocus = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-    }
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -168,10 +138,7 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
     : styles.noChatSelectedMobile;
 
   return (
-    <div
-      className={`${styles.whatsappContainer} ${containerMobileClass}`}
-      style={viewportHeight ? { height: `${viewportHeight - 56}px` } : {}}
-    >
+    <div className={`${styles.whatsappContainer} ${containerMobileClass}`}>
       {/* Left Sidebar Pane */}
       <aside className={styles.sidebar}>
         {/* Sidebar Header */}
