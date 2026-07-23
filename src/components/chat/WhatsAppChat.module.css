@@ -23,15 +23,6 @@
   z-index: 10;
 }
 
-.sidebarCollapsed {
-  width: 0 !important;
-  min-width: 0 !important;
-  margin-left: -380px;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
 /* Sidebar Header */
 .sidebarHeader {
   height: 59px;
@@ -250,6 +241,27 @@
   background-color: #374248;
 }
 
+.showContactsPillBtn {
+  background-color: #00a884;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.showContactsPillBtn:hover {
+  background-color: #008069;
+}
+
 .hamburgerBtnCollapsed {
   width: auto !important;
   padding: 6px 14px !important;
@@ -295,6 +307,31 @@
 .floatingEdgeExpandBtn:hover {
   background-color: #008069;
   transform: translateX(3px);
+}
+
+.topPinnedExpandBtn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+  background-color: #00a884;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.topPinnedExpandBtn:hover {
+  background-color: #008069;
+  transform: scale(1.03);
 }
 
 .chatHeaderTitle {

@@ -192,8 +192,8 @@ export function subscribeToUserRooms(
         // Group rooms or rooms where user is participant
         if (data.isGroup || (data.participants && data.participants.includes(currentUserId))) {
           // If direct chat, set room name to the OTHER participant's name
-          let roomName = data.name;
-          if (!data.isGroup && data.participantNames) {
+          let roomName = d.id === "general" ? "General Community Chat" : data.name;
+          if (d.id !== "general" && !data.isGroup && data.participantNames) {
             const otherId = data.participants?.find((id) => id !== currentUserId);
             if (otherId && data.participantNames[otherId]) {
               roomName = data.participantNames[otherId];
@@ -224,4 +224,68 @@ export function subscribeToUserRooms(
       console.error("Error subscribing to user rooms:", err);
     }
   );
+}
+
+// Global message tracking for Superadmin Audit Logs
+export interface GlobalChatMessage extends ChatMessage {
+  roomName: string;
+}
+
+export function subscribeToAllGlobalMessages(
+  callback: (messages: GlobalChatMessage[]) => void
+) {
+  const chatsRef = collection(db, "chats");
+  const messageUnsubs: Record<string, () => void> = {};
+  const roomMessagesMap: Record<string, GlobalChatMessage[]> = {};
+  const roomNamesMap: Record<string, string> = {};
+
+  const unsubChats = onSnapshot(
+    chatsRef,
+    (chatsSnap) => {
+      chatsSnap.forEach((chatDoc) => {
+        const roomId = chatDoc.id;
+        const chatData = chatDoc.data();
+        roomNamesMap[roomId] = chatData.name || `Room: ${roomId}`;
+
+        if (!messageUnsubs[roomId]) {
+          const msgsRef = collection(db, "chats", roomId, "messages");
+          const q = query(msgsRef, orderBy("createdAt", "desc"), limit(100));
+
+          messageUnsubs[roomId] = onSnapshot(
+            q,
+            (msgSnap) => {
+              const roomMsgs: GlobalChatMessage[] = msgSnap.docs.map((d) => ({
+                id: d.id,
+                ...(d.data() as Omit<ChatMessage, "id">),
+                roomName: roomNamesMap[roomId] || chatData.name || `Room: ${roomId}`,
+              }));
+              roomMessagesMap[roomId] = roomMsgs;
+
+              // Combine all messages across all rooms and sort by creation time desc
+              const allMsgs = Object.values(roomMessagesMap)
+                .flat()
+                .sort((a, b) => {
+                  const timeA = a.createdAt?.toDate
+                    ? a.createdAt.toDate().getTime()
+                    : 0;
+                  const timeB = b.createdAt?.toDate
+                    ? b.createdAt.toDate().getTime()
+                    : 0;
+                  return timeB - timeA;
+                });
+
+              callback(allMsgs);
+            },
+            (err) => console.error(`Error subscribing to room ${roomId} msgs:`, err)
+          );
+        }
+      });
+    },
+    (err) => console.error("Error subscribing to chats for superadmin logs:", err)
+  );
+
+  return () => {
+    unsubChats();
+    Object.values(messageUnsubs).forEach((unsub) => unsub());
+  };
 }

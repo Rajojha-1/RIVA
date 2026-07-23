@@ -5,6 +5,7 @@ import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, onSnaps
 import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import WhatsAppChat from "@/components/chat/WhatsAppChat";
+import { subscribeToAllGlobalMessages, GlobalChatMessage } from "@/lib/chatService";
 import styles from "./superadmin.module.css";
 
 interface Branch {
@@ -80,6 +81,8 @@ export default function SuperadminPage() {
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [choices, setChoices] = useState<any[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [globalChatLogs, setGlobalChatLogs] = useState<GlobalChatMessage[]>([]);
+  const [chatSearchFilter, setChatSearchFilter] = useState("");
   const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
   const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
   const [tempAdminMap, setTempAdminMap] = useState<{[studentId: string]: string}>({});
@@ -230,6 +233,11 @@ export default function SuperadminPage() {
       }
     );
 
+    // Global Chat Audit Logs
+    const unsubGlobalChat = subscribeToAllGlobalMessages((messages) => {
+      setGlobalChatLogs(messages);
+    });
+
     return () => {
       unsubBranches();
       unsubAdmins();
@@ -238,6 +246,7 @@ export default function SuperadminPage() {
       unsubStudents();
       unsubLogs();
       unsubSettings();
+      unsubGlobalChat();
     };
   }, [isAuthorized]);
 
@@ -668,6 +677,17 @@ export default function SuperadminPage() {
 
   const pendingVerificationStudents = students.filter((s) => s.status === "pending_verification");
 
+  const filteredChatLogs = globalChatLogs.filter((msg) => {
+    if (!chatSearchFilter.trim()) return true;
+    const query = chatSearchFilter.toLowerCase();
+    return (
+      (msg.senderName && msg.senderName.toLowerCase().includes(query)) ||
+      (msg.roomName && msg.roomName.toLowerCase().includes(query)) ||
+      (msg.text && msg.text.toLowerCase().includes(query)) ||
+      (msg.senderRole && msg.senderRole.toLowerCase().includes(query))
+    );
+  });
+
   const superAdminNavItems = [
     { id: "verification", label: `Student Verification (${pendingVerificationStudents.length})` },
     { id: "assign", label: `Student & Admin Mapping (${students.length})` },
@@ -759,53 +779,57 @@ export default function SuperadminPage() {
               }}
             />
           )}
-          {/* Registration Control Banner */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "1.25rem 1.5rem",
-            marginBottom: "1.5rem",
-            backgroundColor: "var(--card-bg, #1e1e24)",
-            borderRadius: "0.75rem",
-            border: isRegistrationOpen ? "1px solid rgba(34, 197, 94, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          }}>
-            <div>
-              <div style={{ fontSize: "1.1rem", fontWeight: "600", color: "var(--foreground)" }}>
-                Student Registration Portal:{" "}
-                <span style={{ color: isRegistrationOpen ? "#22c55e" : "#ef4444", fontWeight: "700" }}>
-                  {isRegistrationOpen ? "OPEN (Accepting New Signups)" : "CLOSED (New Signups Blocked)"}
-                </span>
+          {/* Registration Control Banner (hidden when in WhatsApp Chat tab) */}
+          {activeTab !== "chat" && (
+            <>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "1.25rem 1.5rem",
+                marginBottom: "1.5rem",
+                backgroundColor: "var(--card-bg, #1e1e24)",
+                borderRadius: "0.75rem",
+                border: isRegistrationOpen ? "1px solid rgba(34, 197, 94, 0.4)" : "1px solid rgba(239, 68, 68, 0.4)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              }}>
+                <div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: "600", color: "var(--foreground)" }}>
+                    Student Registration Portal:{" "}
+                    <span style={{ color: isRegistrationOpen ? "#22c55e" : "#ef4444", fontWeight: "700" }}>
+                      {isRegistrationOpen ? "OPEN (Accepting New Signups)" : "CLOSED (New Signups Blocked)"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.3rem", color: "var(--muted-foreground)" }}>
+                    {isRegistrationOpen
+                      ? "New students can sign up with Google. Existing students & admins can sign in."
+                      : "New student signups are blocked. Existing registered students, admin logins, and admin registration requests remain active."}
+                  </div>
+                </div>
+                <button
+                  onClick={handleToggleRegistration}
+                  style={{
+                    padding: "0.6rem 1.25rem",
+                    borderRadius: "0.5rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    border: "none",
+                    backgroundColor: isRegistrationOpen ? "#ef4444" : "#22c55e",
+                    color: "#ffffff",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    transition: "all 0.2s ease",
+                    whiteSpace: "nowrap",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  {isRegistrationOpen ? "Close New Signups" : "Open New Signups"}
+                </button>
               </div>
-              <div style={{ fontSize: "0.85rem", opacity: 0.8, marginTop: "0.3rem", color: "var(--muted-foreground)" }}>
-                {isRegistrationOpen
-                  ? "New students can sign up with Google. Existing students & admins can sign in."
-                  : "New student signups are blocked. Existing registered students, admin logins, and admin registration requests remain active."}
-              </div>
-            </div>
-            <button
-              onClick={handleToggleRegistration}
-              style={{
-                padding: "0.6rem 1.25rem",
-                borderRadius: "0.5rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                border: "none",
-                backgroundColor: isRegistrationOpen ? "#ef4444" : "#22c55e",
-                color: "#ffffff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                transition: "all 0.2s ease",
-                whiteSpace: "nowrap",
-                marginLeft: "1rem",
-              }}
-            >
-              {isRegistrationOpen ? "Close New Signups" : "Open New Signups"}
-            </button>
-          </div>
 
-          {actionSuccess && <div className={styles.successMessage}>{actionSuccess}</div>}
-          {actionError && <div className={styles.errorMessage}>{actionError}</div>}
+              {actionSuccess && <div className={styles.successMessage}>{actionSuccess}</div>}
+              {actionError && <div className={styles.errorMessage}>{actionError}</div>}
+            </>
+          )}
 
           {activeTab === "verification" && (
             <div className={styles.contentCard}>
@@ -1292,49 +1316,131 @@ export default function SuperadminPage() {
           )}
 
           {activeTab === "logs" && (
-            <div className={styles.contentCard}>
-              <h3 className={styles.cardTitle}>System Activity Logs</h3>
-              <p className={styles.subtitle}>Audit trail of additions, deletions, student mappings, and verifications.</p>
-              
-              {logs.length === 0 ? (
-                <p className={styles.emptyText}>No activity logs recorded yet.</p>
-              ) : (
-                <div className={styles.tableContainer}>
-                  <table className={styles.customTable}>
-                    <thead>
-                      <tr>
-                        <th>Timestamp</th>
-                        <th>User (Actor)</th>
-                        <th>Action Category</th>
-                        <th>Details Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map((log) => (
-                        <tr key={log.id}>
-                          <td style={{ whiteSpace: "nowrap" }}>
-                            {new Date(log.timestamp).toLocaleString()}
-                          </td>
-                          <td>
-                            <strong>{log.actor}</strong>
-                          </td>
-                          <td>
-                            <span className={
-                              log.action.includes("Delete") ? styles.badgePending :
-                              log.action.includes("Add") || log.action.includes("Create") ? styles.badgeSuccess :
-                              styles.badgeSuccess
-                            }>
-                              {log.action}
-                            </span>
-                          </td>
-                          <td>{log.details}</td>
+            <>
+              {/* 1. System Operations Activity Logs */}
+              <div className={styles.contentCard}>
+                <h3 className={styles.cardTitle}>System Activity Logs</h3>
+                <p className={styles.subtitle}>Audit trail of additions, deletions, student mappings, and verifications.</p>
+                
+                {logs.length === 0 ? (
+                  <p className={styles.emptyText}>No activity logs recorded yet.</p>
+                ) : (
+                  <div className={styles.tableContainer}>
+                    <table className={styles.customTable}>
+                      <thead>
+                        <tr>
+                          <th>Timestamp</th>
+                          <th>User (Actor)</th>
+                          <th>Action Category</th>
+                          <th>Details Description</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {logs.map((log) => (
+                          <tr key={log.id}>
+                            <td style={{ whiteSpace: "nowrap" }}>
+                              {new Date(log.timestamp).toLocaleString()}
+                            </td>
+                            <td>
+                              <strong>{log.actor}</strong>
+                            </td>
+                            <td>
+                              <span className={
+                                log.action.includes("Delete") ? styles.badgePending :
+                                log.action.includes("Add") || log.action.includes("Create") ? styles.badgeSuccess :
+                                styles.badgeSuccess
+                              }>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td>{log.details}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Real-time Live Chat Audit Logs */}
+              <div className={styles.contentCard} style={{ marginTop: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
+                  <div>
+                    <h3 className={styles.cardTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#00a884">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                      </svg>
+                      <span>Real-Time Live Chat Audit Logs</span>
+                    </h3>
+                    <p className={styles.subtitle}>
+                      Superadmin live stream monitoring: See every chat message sent across all rooms (who said what to which chat).
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="Filter by sender, room, text..."
+                    value={chatSearchFilter}
+                    onChange={(e) => setChatSearchFilter(e.target.value)}
+                    style={{ width: "260px" }}
+                  />
                 </div>
-              )}
-            </div>
+
+                {filteredChatLogs.length === 0 ? (
+                  <p className={styles.emptyText}>No chat messages recorded in the audit log yet.</p>
+                ) : (
+                  <div className={styles.tableContainer}>
+                    <table className={styles.customTable}>
+                      <thead>
+                        <tr>
+                          <th>Timestamp</th>
+                          <th>Sender (Who Said It)</th>
+                          <th>Role</th>
+                          <th>Target Chat Room</th>
+                          <th>Message Content</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredChatLogs.map((msg) => {
+                          const timeStr = msg.createdAt?.toDate
+                            ? msg.createdAt.toDate().toLocaleString()
+                            : "Just now";
+                          return (
+                            <tr key={msg.id}>
+                              <td style={{ whiteSpace: "nowrap", fontSize: "0.8rem", color: "var(--muted)" }}>
+                                {timeStr}
+                              </td>
+                              <td>
+                                <strong>{msg.senderName || "Anonymous"}</strong>
+                              </td>
+                              <td>
+                                <span
+                                  style={
+                                    msg.senderRole === "superadmin"
+                                      ? { backgroundColor: "rgba(239, 68, 68, 0.15)", color: "#ef4444", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
+                                      : msg.senderRole === "admin"
+                                      ? { backgroundColor: "rgba(59, 130, 246, 0.15)", color: "#3b82f6", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
+                                      : { backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
+                                  }
+                                >
+                                  {(msg.senderRole || "USER").toUpperCase()}
+                                </span>
+                              </td>
+                              <td>
+                                <strong style={{ color: "#00a884" }}>{msg.roomName}</strong>
+                              </td>
+                              <td style={{ maxWidth: "380px", wordBreak: "break-word" }}>
+                                {msg.text}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </main>
       </div>

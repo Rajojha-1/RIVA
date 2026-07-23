@@ -29,7 +29,6 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -135,11 +134,7 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
   return (
     <div className={`${styles.whatsappContainer} ${containerMobileClass}`}>
       {/* Left Sidebar Pane */}
-      <aside
-        className={`${styles.sidebar} ${
-          isSidebarCollapsed ? styles.sidebarCollapsed : ""
-        }`}
-      >
+      <aside className={styles.sidebar}>
         {/* Sidebar Header */}
         <div className={styles.sidebarHeader}>
           <div className={styles.currentUserInfo}>
@@ -242,32 +237,6 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
               </svg>
             </button>
 
-            {/* Desktop Sidebar Panel Toggle Button */}
-            <button
-              className={`${styles.hamburgerBtn} ${
-                isSidebarCollapsed ? styles.hamburgerBtnCollapsed : ""
-              }`}
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              title={
-                isSidebarCollapsed
-                  ? "Expand Contacts Side Panel"
-                  : "Collapse Contacts Side Panel (Maximize Chat Space)"
-              }
-            >
-              {isSidebarCollapsed ? (
-                <>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-                  </svg>
-                  <span className={styles.showChatsLabel}>Show Contacts</span>
-                </>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M4 4h16v16H4V4zm2 2v12h4V6H6zm6 0v12h6V6h-6z" />
-                </svg>
-              )}
-            </button>
-
             <div className={styles.avatar}>
               {activeRoomId === "general" ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -279,7 +248,9 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
             </div>
 
             <div className={styles.chatHeaderTitle}>
-              <span className={styles.chatHeaderName}>{activeRoomName}</span>
+              <span className={styles.chatHeaderName}>
+                {activeRoomName || "General Community Chat"}
+              </span>
               <span className={styles.chatHeaderStatus}>
                 {activeRoomId === "general"
                   ? "Group Chat • Real-time"
@@ -288,20 +259,6 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
             </div>
           </div>
         </header>
-
-        {/* Floating Left-Edge Button to Expand Sidebar when Collapsed */}
-        {isSidebarCollapsed && (
-          <button
-            className={styles.floatingEdgeExpandBtn}
-            onClick={() => setIsSidebarCollapsed(false)}
-            title="Expand Contacts Panel"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-            </svg>
-            <span>Show Contacts</span>
-          </button>
-        )}
 
         {/* Message Thread */}
         <div className={styles.messagesContainer}>
