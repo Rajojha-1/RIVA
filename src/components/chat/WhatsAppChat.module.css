@@ -358,9 +358,9 @@
 
 /* Messages Scroll Container */
 .messagesContainer {
-  flex: 1 1 auto;
-  height: 100%;
+  flex: 1;
   min-height: 0;
+  max-height: 100%;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   padding: 16px 5%;
