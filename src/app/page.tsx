@@ -96,39 +96,48 @@ export default function Home() {
   const hasSelectedChoices = !!(profile && profile.choices && profile.choices.length >= 2);
   const isVerified = profile?.status === "verified" || profile?.status === "pending_admin_approval" || profile?.status === "approved";
 
+  const studentNavItems = [
+    { id: "dashboard", label: "Profile & Choices" },
+    { id: "chat", label: "WhatsApp Chat", color: "#00a884" },
+  ];
+
   return (
     <div className={styles.appContainer}>
       <Navbar
         userEmail={user.email}
+        navItems={studentNavItems}
         activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
+        onTabChange={(tabId) => setActiveTab(tabId as "dashboard" | "chat")}
       />
-      {activeTab === "chat" ? (
-        <WhatsAppChat
-          currentUser={{
-            uid: user.uid,
-            displayName: profile?.name || user.email?.split("@")[0] || "Student",
-            email: user.email || "",
-            role: "user",
-          }}
-        />
-      ) : (
-        <div className={styles.mainLayout}>
-          {/* Left Side Panel */}
-          <aside className={styles.sidebar}>
-            <SidebarSummary profile={profile} />
-          </aside>
+      <div className={styles.mainLayout}>
+        {/* Left Side Panel */}
+        <aside className={styles.sidebar}>
+          <SidebarSummary profile={profile} />
+        </aside>
 
-          {/* Main Content Area */}
-          <main className={styles.mainContent}>
-            {!hasFilledProfile && (
-              <ProfileForm
-                userId={user.uid}
-                userEmail={user.email || ""}
-                initialData={profile}
-                onSave={(data) => setProfile((prev) => ({ ...prev, ...data }))}
-              />
-            )}
+        {/* Main Content Area */}
+        <main className={styles.mainContent}>
+          {activeTab === "chat" && (
+            <WhatsAppChat
+              currentUser={{
+                uid: user.uid,
+                displayName: profile?.name || user.email?.split("@")[0] || "Student",
+                email: user.email || "",
+                role: "user",
+              }}
+            />
+          )}
+
+          {activeTab === "dashboard" && (
+            <>
+              {!hasFilledProfile && (
+                <ProfileForm
+                  userId={user.uid}
+                  userEmail={user.email || ""}
+                  initialData={profile}
+                  onSave={(data) => setProfile((prev) => ({ ...prev, ...data }))}
+                />
+              )}
 
             {hasFilledProfile && !hasSelectedChoices && (
               <ChoiceSelector
@@ -231,9 +240,10 @@ export default function Home() {
                 onUpdate={() => {}} // Snapshot listener will update automatically
               />
             )}
-          </main>
-        </div>
-      )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

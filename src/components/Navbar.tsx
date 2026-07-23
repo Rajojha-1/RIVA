@@ -6,18 +6,27 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 
+export interface NavItem {
+  id: string;
+  label: string;
+  badge?: string | number;
+  color?: string;
+}
+
 interface NavbarProps {
   userEmail?: string | null;
   role?: "user" | "admin" | "superadmin";
-  activeTab?: "dashboard" | "chat";
-  onTabChange?: (tab: "dashboard" | "chat") => void;
+  navItems?: NavItem[];
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
   onLogout?: () => void;
 }
 
 export default function Navbar({
   userEmail,
   role,
-  activeTab = "dashboard",
+  navItems = [],
+  activeTab,
   onTabChange,
   onLogout,
 }: NavbarProps) {
@@ -41,9 +50,9 @@ export default function Navbar({
     }
   };
 
-  const handleTabClick = (tab: "dashboard" | "chat") => {
+  const handleItemClick = (id: string) => {
     if (onTabChange) {
-      onTabChange(tab);
+      onTabChange(id);
     }
     setMenuOpen(false);
   };
@@ -51,7 +60,7 @@ export default function Navbar({
   return (
     <nav className={styles.navbar}>
       <div className={styles.navBrandContainer}>
-        {/* Hamburger Menu Toggle Button */}
+        {/* Hamburger Menu Toggle Button for Mobile */}
         {userEmail && (
           <button
             className={styles.hamburgerToggleBtn}
@@ -74,24 +83,24 @@ export default function Navbar({
       </div>
 
       {/* Desktop Navigation Links */}
-      {userEmail && onTabChange && (
+      {userEmail && navItems.length > 0 && onTabChange && (
         <div className={styles.navCenter}>
-          <button
-            className={`${styles.tabBtn} ${
-              activeTab === "dashboard" ? styles.activeTabBtn : ""
-            }`}
-            onClick={() => handleTabClick("dashboard")}
-          >
-            📋 Dashboard
-          </button>
-          <button
-            className={`${styles.tabBtn} ${
-              activeTab === "chat" ? styles.activeTabBtn : ""
-            }`}
-            onClick={() => handleTabClick("chat")}
-          >
-            💬 WhatsApp Chat
-          </button>
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                className={`${styles.tabBtn} ${isActive ? styles.activeTabBtn : ""}`}
+                onClick={() => handleItemClick(item.id)}
+                style={item.color ? { color: isActive ? "#ffffff" : item.color } : {}}
+              >
+                {item.label}
+                {item.badge !== undefined && (
+                  <span className={styles.badge}>{item.badge}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -109,39 +118,51 @@ export default function Navbar({
         )}
       </div>
 
-      {/* Collapsible Hamburger Menu Drawer (Mobile & Small Viewports) */}
+      {/* Collapsible Single Hamburger Menu Drawer (Mobile & Small Viewports) */}
       {menuOpen && userEmail && (
-        <div className={styles.mobileMenuDrawer}>
-          {onTabChange && (
-            <div className={styles.mobileMenuTabs}>
-              <button
-                className={`${styles.mobileTabBtn} ${
-                  activeTab === "dashboard" ? styles.mobileActiveTabBtn : ""
-                }`}
-                onClick={() => handleTabClick("dashboard")}
-              >
-                📋 Dashboard
-              </button>
-              <button
-                className={`${styles.mobileTabBtn} ${
-                  activeTab === "chat" ? styles.mobileActiveTabBtn : ""
-                }`}
-                onClick={() => handleTabClick("chat")}
-              >
-                💬 WhatsApp Chat
+        <>
+          <div
+            className={styles.menuBackdrop}
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className={styles.mobileMenuDrawer}>
+            {navItems.length > 0 && onTabChange && (
+              <div className={styles.mobileMenuTabs}>
+                {navItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`${styles.mobileTabBtn} ${
+                        isActive ? styles.mobileActiveTabBtn : ""
+                      }`}
+                      onClick={() => handleItemClick(item.id)}
+                      style={
+                        item.color
+                          ? { color: isActive ? "#ffffff" : item.color }
+                          : {}
+                      }
+                    >
+                      <span>{item.label}</span>
+                      {item.badge !== undefined && (
+                        <span className={styles.badge}>{item.badge}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className={styles.mobileProfileSection}>
+              <span className={styles.mobileUserEmail}>
+                {userEmail} {role ? `(${role})` : ""}
+              </span>
+              <button onClick={handleLogout} className={styles.mobileLogoutBtn}>
+                Logout Account
               </button>
             </div>
-          )}
-
-          <div className={styles.mobileProfileSection}>
-            <span className={styles.mobileUserEmail}>
-              {userEmail} {role ? `(${role})` : ""}
-            </span>
-            <button onClick={handleLogout} className={styles.mobileLogoutBtn}>
-              Logout Account
-            </button>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );

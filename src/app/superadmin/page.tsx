@@ -668,84 +668,97 @@ export default function SuperadminPage() {
 
   const pendingVerificationStudents = students.filter((s) => s.status === "pending_verification");
 
+  const superAdminNavItems = [
+    { id: "verification", label: `Student Verification (${pendingVerificationStudents.length})` },
+    { id: "assign", label: `Student & Admin Mapping (${students.length})` },
+    { id: "branches", label: `Manage Branches (${branches.length})` },
+    { id: "admins", label: `Manage Admins (${admins.length})` },
+    { id: "logs", label: `Activity Logs (${logs.length})` },
+    { id: "chat", label: "WhatsApp Chat", color: "#00a884" },
+  ];
+
   return (
     <div className={styles.appContainer}>
       <Navbar
         userEmail="Superadmin"
         role="superadmin"
-        activeTab={activeTab === "chat" ? "chat" : "dashboard"}
-        onTabChange={(tab) => setActiveTab(tab === "chat" ? "chat" : "verification")}
+        navItems={superAdminNavItems}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as SuperAdminTab)}
         onLogout={handleLogout}
       />
-      {activeTab === "chat" ? (
-        <WhatsAppChat
-          currentUser={{
-            uid: "superadmin",
-            displayName: "Superadmin",
-            email: "superadmin@riva.com",
-            role: "superadmin",
-          }}
-        />
-      ) : (
-        <div className={styles.mainLayout}>
-          {/* Left Side Panel */}
-          <aside className={styles.sidebar}>
-            <h3 className={styles.sidebarTitle}>Superadmin Control</h3>
-            <div className={styles.sidebarNav}>
-              <button
-                onClick={() => setActiveTab("verification")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "verification" ? styles.active : ""
-                }`}
-              >
-                Student Verification ({pendingVerificationStudents.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("assign")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "assign" ? styles.active : ""
-                }`}
-              >
-                Student & Admin Mapping ({students.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("branches")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "branches" ? styles.active : ""
-                }`}
-              >
-                Manage Branches ({branches.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("admins")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "admins" ? styles.active : ""
-                }`}
-              >
-                Manage Admins ({admins.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("logs")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "logs" ? styles.active : ""
-                }`}
-              >
-                Activity Logs ({logs.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("chat")}
-                className={`${styles.sidebarLink} ${
-                  (activeTab as string) === "chat" ? styles.active : ""
-                }`}
-                style={{ color: "#00a884", fontWeight: 700 }}
-              >
-                💬 WhatsApp Chat
-              </button>
-            </div>
-          </aside>
+      <div className={styles.mainLayout}>
+        {/* Left Side Panel */}
+        <aside className={styles.sidebar}>
+          <h3 className={styles.sidebarTitle}>Superadmin Control</h3>
+          <div className={styles.sidebarNav}>
+            <button
+              onClick={() => setActiveTab("verification")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "verification" ? styles.active : ""
+              }`}
+            >
+              Student Verification ({pendingVerificationStudents.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("assign")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "assign" ? styles.active : ""
+              }`}
+            >
+              Student & Admin Mapping ({students.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("branches")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "branches" ? styles.active : ""
+              }`}
+            >
+              Manage Branches ({branches.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("admins")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "admins" ? styles.active : ""
+              }`}
+            >
+              Manage Admins ({admins.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "logs" ? styles.active : ""
+              }`}
+            >
+              Activity Logs ({logs.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "chat" ? styles.active : ""
+              }`}
+              style={{ color: "#00a884", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+              </svg>
+              <span>WhatsApp Chat</span>
+            </button>
+          </div>
+        </aside>
 
-          {/* Main Content Area */}
-          <main className={styles.mainContent}>
+        {/* Main Content Area */}
+        <main className={styles.mainContent}>
+          {activeTab === "chat" && (
+            <WhatsAppChat
+              currentUser={{
+                uid: "superadmin",
+                displayName: "Superadmin",
+                email: "superadmin@riva.com",
+                role: "superadmin",
+              }}
+            />
+          )}
           {/* Registration Control Banner */}
           <div style={{
             display: "flex",
@@ -1325,7 +1338,6 @@ export default function SuperadminPage() {
           )}
         </main>
       </div>
-      )}
     </div>
   );
 }

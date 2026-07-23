@@ -619,97 +619,110 @@ export default function AdminPage() {
     );
   }
 
+  const adminNavItems = [
+    { id: "requests", label: `Student Pool (${studentRequests.length})`, badge: directRequestsCount > 0 ? `${directRequestsCount} Direct` : undefined },
+    { id: "assigned", label: `Assigned Students (${assignedStudents.length})` },
+    { id: "choices", label: `Manage Choices (${choices.length})` },
+    { id: "profile", label: "My Account Details" },
+    { id: "chat", label: "WhatsApp Chat", color: "#00a884" },
+  ];
+
   return (
     <div className={styles.appContainer}>
       <Navbar
         userEmail={adminUsername}
         role="admin"
-        activeTab={activeTab === "chat" ? "chat" : "dashboard"}
-        onTabChange={(tab) => setActiveTab(tab === "chat" ? "chat" : "requests")}
+        navItems={adminNavItems}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as AdminTab)}
         onLogout={handleLogout}
       />
-      {activeTab === "chat" ? (
-        <WhatsAppChat
-          currentUser={{
-            uid: `admin_${adminUsername}`,
-            displayName: `${adminUsername} (Admin)`,
-            email: `${adminUsername}@riva.com`,
-            role: "admin",
-          }}
-        />
-      ) : (
-        <div className={styles.mainLayout}>
-          {/* Left Side Panel */}
-          <aside className={styles.sidebar}>
-            <h3 className={styles.sidebarTitle}>Admin Panel</h3>
-            <div className={styles.sidebarNav}>
-              <button
-                onClick={() => setActiveTab("requests")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "requests" ? styles.active : ""
-                }`}
-              >
-                Student Pool ({studentRequests.length})
-                {directRequestsCount > 0 && (
-                  <span
-                    style={{
-                      marginLeft: "0.5rem",
-                      backgroundColor: "#eab308",
-                      color: "#000",
-                      fontSize: "0.75rem",
-                      padding: "0.1rem 0.45rem",
-                      borderRadius: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {directRequestsCount} Direct
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("assigned")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "assigned" ? styles.active : ""
-                }`}
-              >
-                Assigned Students ({assignedStudents.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("choices")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "choices" ? styles.active : ""
-                }`}
-              >
-                Manage Choices ({choices.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`${styles.sidebarLink} ${
-                  activeTab === "profile" ? styles.active : ""
-                }`}
-              >
-                My Account Details
-              </button>
-              <button
-                onClick={() => setActiveTab("chat")}
-                className={`${styles.sidebarLink} ${
-                  (activeTab as string) === "chat" ? styles.active : ""
-                }`}
-                style={{ color: "#00a884", fontWeight: 700 }}
-              >
-                💬 WhatsApp Chat
-              </button>
-            </div>
-          </aside>
+      <div className={styles.mainLayout}>
+        {/* Left Side Panel */}
+        <aside className={styles.sidebar}>
+          <h3 className={styles.sidebarTitle}>Admin Panel</h3>
+          <div className={styles.sidebarNav}>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "requests" ? styles.active : ""
+              }`}
+            >
+              Student Pool ({studentRequests.length})
+              {directRequestsCount > 0 && (
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    backgroundColor: "#eab308",
+                    color: "#000",
+                    fontSize: "0.75rem",
+                    padding: "0.1rem 0.45rem",
+                    borderRadius: "0.75rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  {directRequestsCount} Direct
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("assigned")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "assigned" ? styles.active : ""
+              }`}
+            >
+              Assigned Students ({assignedStudents.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("choices")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "choices" ? styles.active : ""
+              }`}
+            >
+              Manage Choices ({choices.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "profile" ? styles.active : ""
+              }`}
+            >
+              My Account Details
+            </button>
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`${styles.sidebarLink} ${
+                activeTab === "chat" ? styles.active : ""
+              }`}
+              style={{ color: "#00a884", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+              </svg>
+              <span>WhatsApp Chat</span>
+            </button>
+          </div>
+        </aside>
 
-          {/* Main Content Area */}
-          <main className={styles.mainContent}>
-            {actionSuccess && (
-              <div className={styles.successMessage}>{actionSuccess}</div>
-            )}
-            {actionError && (
-              <div className={styles.errorMessage}>{actionError}</div>
-            )}
+        {/* Main Content Area */}
+        <main className={styles.mainContent}>
+          {actionSuccess && (
+            <div className={styles.successMessage}>{actionSuccess}</div>
+          )}
+          {actionError && (
+            <div className={styles.errorMessage}>{actionError}</div>
+          )}
+
+          {activeTab === "chat" && (
+            <WhatsAppChat
+              currentUser={{
+                uid: `admin_${adminUsername}`,
+                displayName: `${adminUsername} (Admin)`,
+                email: `${adminUsername}@riva.com`,
+                role: "admin",
+              }}
+            />
+          )}
 
           {activeTab === "requests" && (
             <div className={styles.contentCard}>
@@ -1013,7 +1026,6 @@ export default function AdminPage() {
           )}
         </main>
       </div>
-      )}
     </div>
   );
 }

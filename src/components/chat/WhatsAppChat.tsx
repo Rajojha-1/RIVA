@@ -155,7 +155,12 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
         {/* Search Bar */}
         <div className={styles.searchContainer}>
           <div className={styles.searchBox}>
-            <span className={styles.searchIcon}>🔍</span>
+            <span className={styles.searchIcon}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </span>
             <input
               type="text"
               className={styles.searchInput}
@@ -177,7 +182,13 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
                 onClick={() => handleSelectRoom(room)}
               >
                 <div className={styles.avatar}>
-                  {room.isGroup ? "👥" : (room.name || "U")[0].toUpperCase()}
+                  {room.isGroup ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                  ) : (
+                    (room.name || "U")[0].toUpperCase()
+                  )}
                 </div>
                 <div className={styles.chatItemContent}>
                   <div className={styles.chatItemTop}>
@@ -258,9 +269,13 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
             </button>
 
             <div className={styles.avatar}>
-              {activeRoomId === "general"
-                ? "👥"
-                : (activeRoomName || "C")[0].toUpperCase()}
+              {activeRoomId === "general" ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+              ) : (
+                (activeRoomName || "C")[0].toUpperCase()
+              )}
             </div>
 
             <div className={styles.chatHeaderTitle}>
@@ -292,7 +307,11 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
         <div className={styles.messagesContainer}>
           {messages.length === 0 ? (
             <div className={styles.emptyState}>
-              <div className={styles.emptyStateIcon}>💬</div>
+              <div className={styles.emptyStateIcon}>
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                </svg>
+              </div>
               <div className={styles.emptyStateTitle}>No messages yet</div>
               <div className={styles.emptyStateText}>
                 Be the first to send a message in {activeRoomName}! Real-time updates via Firebase.

@@ -49,9 +49,7 @@
 }
 
 .navCenter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: none;
 }
 
 .tabBtn {
@@ -72,6 +70,16 @@
 .tabBtn:hover {
   background-color: var(--secondary);
   color: var(--foreground);
+}
+
+.badge {
+  margin-left: 0.4rem;
+  background-color: #eab308;
+  color: #000000;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
 }
 
 .activeTabBtn {
@@ -104,6 +112,18 @@
 
 .logoutBtn:hover {
   background-color: var(--border);
+}
+
+/* Backdrop Overlay when Hamburger is Open */
+.menuBackdrop {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 56px);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99;
 }
 
 /* Collapsible Hamburger Drawer */

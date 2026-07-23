@@ -78,11 +78,7 @@
     height: auto;
   }
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--sidebar-border);
-    height: auto;
-    overflow-y: visible;
+    display: none !important;
   }
   .mainContent {
     overflow-y: visible;
