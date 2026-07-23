@@ -768,7 +768,7 @@ export default function SuperadminPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className={styles.mainContent}>
+        <main className={`${styles.mainContent} ${activeTab === "chat" ? styles.chatMainContent : ""}`}>
           {activeTab === "chat" && (
             <WhatsAppChat
               currentUser={{

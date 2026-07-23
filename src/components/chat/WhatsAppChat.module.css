@@ -1,8 +1,10 @@
 /* WhatsApp Dark Theme Color Palette */
 .whatsappContainer {
   display: flex;
-  height: calc(100vh - 56px);
+  height: 100%;
   width: 100%;
+  flex: 1;
+  min-height: 0;
   background-color: #0b141a;
   color: #e9edef;
   font-family: Segoe UI, Helvetica Neue, Helvetica, Roboto, Arial, sans-serif;

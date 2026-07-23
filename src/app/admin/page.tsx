@@ -705,7 +705,7 @@ export default function AdminPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className={styles.mainContent}>
+        <main className={`${styles.mainContent} ${activeTab === "chat" ? styles.chatMainContent : ""}`}>
           {actionSuccess && (
             <div className={styles.successMessage}>{actionSuccess}</div>
           )}
