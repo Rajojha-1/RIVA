@@ -476,9 +476,6 @@
   border-top: 1px solid #222d34;
   flex-shrink: 0;
   margin-top: auto;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
 }
 
 .inputField {
