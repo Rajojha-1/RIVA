@@ -358,9 +358,8 @@
 
 /* Messages Scroll Container */
 .messagesContainer {
-  flex: 1 1 auto;
-  height: calc(100% - 121px);
-  max-height: calc(100% - 121px);
+  flex: 1 1 0px;
+  height: auto;
   min-height: 0;
   overflow-y: auto !important;
   overflow-x: hidden;
