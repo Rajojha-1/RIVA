@@ -102,6 +102,7 @@
     height: calc(100dvh - 56px) !important;
     display: flex !important;
     flex-direction: column !important;
+    flex: 1 !important;
   }
 }
 

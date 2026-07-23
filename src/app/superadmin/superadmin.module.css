@@ -252,6 +252,7 @@
     min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    flex: 1 !important;
   }
 }
 
