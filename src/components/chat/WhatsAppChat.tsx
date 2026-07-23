@@ -36,7 +36,7 @@ export default function WhatsAppChat({ currentUser }: WhatsAppChatProps) {
   const handleInputFocus = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+    }, 150);
   };
 
   // Initialize general room & subscribe to user rooms

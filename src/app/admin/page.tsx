@@ -208,7 +208,7 @@ export default function AdminPage() {
     if (!isLoggedIn || !adminUsername) return;
 
     const usersRef = collection(db, "users");
-    
+
     // Subscribe to all users to filter locally for simplicity and speed
     const unsubscribe = onSnapshot(usersRef, (snapshot) => {
       const requestsList: StudentRequest[] = [];
@@ -328,7 +328,7 @@ export default function AdminPage() {
   const handleDeleteChoice = async (choiceId: string) => {
     const choice = choices.find((c) => c.id === choiceId);
     const choiceName = choice ? choice.name : "this choice";
-    
+
     const confirmDelete = window.confirm(
       `Warning: Are you absolutely sure you want to permanently delete "${choiceName}"? This action is permanent and cannot be undone.`
     );
@@ -460,7 +460,7 @@ export default function AdminPage() {
               <p className={styles.subtitle} style={{ marginBottom: "0.5rem", gridColumn: "span 2", textAlign: "center" }}>Submit details to be verified by Superadmin.</p>
               {regError && <div className={styles.errorMessage} style={{ gridColumn: "span 2" }}>{regError}</div>}
               {regSuccess && <div className={styles.successMessage} style={{ gridColumn: "span 2", color: "#10b981", fontSize: "0.85rem", marginBottom: "0.5rem", backgroundColor: "#ecfdf5", padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid #a7f3d0" }}>{regSuccess}</div>}
-              
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>Display Name / Full Name</label>
                 <input
@@ -644,9 +644,8 @@ export default function AdminPage() {
           <div className={styles.sidebarNav}>
             <button
               onClick={() => setActiveTab("requests")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "requests" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "requests" ? styles.active : ""
+                }`}
             >
               Student Pool ({studentRequests.length})
               {directRequestsCount > 0 && (
@@ -667,37 +666,33 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab("assigned")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "assigned" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "assigned" ? styles.active : ""
+                }`}
             >
               Assigned Students ({assignedStudents.length})
             </button>
             <button
               onClick={() => setActiveTab("choices")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "choices" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "choices" ? styles.active : ""
+                }`}
             >
               Manage Choices ({choices.length})
             </button>
             <button
               onClick={() => setActiveTab("profile")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "profile" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "profile" ? styles.active : ""
+                }`}
             >
               My Account Details
             </button>
             <button
               onClick={() => setActiveTab("chat")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "chat" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "chat" ? styles.active : ""
+                }`}
               style={{ color: "#00a884", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
               </svg>
               <span>WhatsApp Chat</span>
             </button>
@@ -727,7 +722,7 @@ export default function AdminPage() {
           {activeTab === "requests" && (
             <div className={styles.contentCard}>
               <h3 className={styles.cardTitle}>Student Admission Requests</h3>
-              
+
               {/* Domain Stats filter pills */}
               <div className={styles.filterSection}>
                 <span className={styles.filterTitle}>Filter Requests:</span>
@@ -972,7 +967,7 @@ export default function AdminPage() {
             <div className={styles.contentCard}>
               <h3 className={styles.cardTitle}>Manage Selection Choices</h3>
               <p className={styles.subtitle}>Add or remove choices that users can select from (min 2, max 4 choices required for students).</p>
-              
+
               <form onSubmit={handleAddChoice} className={styles.addForm}>
                 <input
                   type="text"
@@ -1011,7 +1006,7 @@ export default function AdminPage() {
             <div className={styles.contentCard}>
               <h3 className={styles.cardTitle}>My Admin Profile</h3>
               <p className={styles.subtitle}>Your account details generated by the Superadmin.</p>
-              
+
               <div className={styles.profileDetailsBox}>
                 <div className={styles.profileField}>
                   <span className={styles.profileLabel}>Admin Username</span>

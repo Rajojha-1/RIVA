@@ -85,8 +85,8 @@ export default function SuperadminPage() {
   const [chatSearchFilter, setChatSearchFilter] = useState("");
   const [remarksMap, setRemarksMap] = useState<{ [studentId: string]: string }>({});
   const [analyzingMap, setAnalyzingMap] = useState<{ [studentId: string]: boolean }>({});
-  const [tempAdminMap, setTempAdminMap] = useState<{[studentId: string]: string}>({});
-  const [tempDomainMap, setTempDomainMap] = useState<{[studentId: string]: string}>({});
+  const [tempAdminMap, setTempAdminMap] = useState<{ [studentId: string]: string }>({});
+  const [tempDomainMap, setTempDomainMap] = useState<{ [studentId: string]: string }>({});
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
 
   // Input States
@@ -353,7 +353,7 @@ export default function SuperadminPage() {
 
     try {
       const adminId = newAdminUsername.trim().toLowerCase();
-      
+
       // 1. Check if the username already exists in admins
       const adminDoc = await getDoc(doc(db, "admins", adminId));
       if (adminDoc.exists()) {
@@ -618,14 +618,14 @@ export default function SuperadminPage() {
       const data = await res.json();
       if (data.summary) {
         setRemarksMap((prev) => ({ ...prev, [student.id]: data.summary }));
-        
+
         // Save to Firestore so it replicates to pool/assigned lists instantly
         const studentRef = doc(db, "users", student.id);
         await updateDoc(studentRef, {
           remarks: data.summary,
           aiRecommendedDomain: data.recommendedDomain || "",
         });
-        
+
         setActionSuccess(`AI evaluation loaded and saved for ${student.name}.`);
       } else if (data.error) {
         setActionError(data.error);
@@ -714,53 +714,47 @@ export default function SuperadminPage() {
           <div className={styles.sidebarNav}>
             <button
               onClick={() => setActiveTab("verification")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "verification" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "verification" ? styles.active : ""
+                }`}
             >
               Student Verification ({pendingVerificationStudents.length})
             </button>
             <button
               onClick={() => setActiveTab("assign")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "assign" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "assign" ? styles.active : ""
+                }`}
             >
               Student & Admin Mapping ({students.length})
             </button>
             <button
               onClick={() => setActiveTab("branches")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "branches" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "branches" ? styles.active : ""
+                }`}
             >
               Manage Branches ({branches.length})
             </button>
             <button
               onClick={() => setActiveTab("admins")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "admins" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "admins" ? styles.active : ""
+                }`}
             >
               Manage Admins ({admins.length})
             </button>
             <button
               onClick={() => setActiveTab("logs")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "logs" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "logs" ? styles.active : ""
+                }`}
             >
               Activity Logs ({logs.length})
             </button>
             <button
               onClick={() => setActiveTab("chat")}
-              className={`${styles.sidebarLink} ${
-                activeTab === "chat" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarLink} ${activeTab === "chat" ? styles.active : ""
+                }`}
               style={{ color: "#00a884", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
               </svg>
               <span>WhatsApp Chat</span>
             </button>
@@ -835,7 +829,7 @@ export default function SuperadminPage() {
             <div className={styles.contentCard}>
               <h3 className={styles.cardTitle}>Verify Completed Profiles</h3>
               <p className={styles.subtitle}>Approve completed details and choices. Verified students can request an Admin.</p>
-              
+
               {pendingVerificationStudents.length === 0 ? (
                 <p className={styles.emptyText}>No students are currently pending profile verification.</p>
               ) : (
@@ -969,9 +963,9 @@ export default function SuperadminPage() {
                           <td>
                             <span className={
                               s.status === "approved" ? styles.badgeSuccess :
-                              s.status === "verified" ? styles.badgeVerified :
-                              s.status === "pending_admin_approval" ? styles.badgePending :
-                              styles.badgeDraft
+                                s.status === "verified" ? styles.badgeVerified :
+                                  s.status === "pending_admin_approval" ? styles.badgePending :
+                                    styles.badgeDraft
                             }>
                               {s.status}
                             </span>
@@ -1321,7 +1315,7 @@ export default function SuperadminPage() {
               <div className={styles.contentCard}>
                 <h3 className={styles.cardTitle}>System Activity Logs</h3>
                 <p className={styles.subtitle}>Audit trail of additions, deletions, student mappings, and verifications.</p>
-                
+
                 {logs.length === 0 ? (
                   <p className={styles.emptyText}>No activity logs recorded yet.</p>
                 ) : (
@@ -1347,8 +1341,8 @@ export default function SuperadminPage() {
                             <td>
                               <span className={
                                 log.action.includes("Delete") ? styles.badgePending :
-                                log.action.includes("Add") || log.action.includes("Create") ? styles.badgeSuccess :
-                                styles.badgeSuccess
+                                  log.action.includes("Add") || log.action.includes("Create") ? styles.badgeSuccess :
+                                    styles.badgeSuccess
                               }>
                                 {log.action}
                               </span>
@@ -1368,7 +1362,7 @@ export default function SuperadminPage() {
                   <div>
                     <h3 className={styles.cardTitle} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="#00a884">
-                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" />
                       </svg>
                       <span>Real-Time Live Chat Audit Logs</span>
                     </h3>
@@ -1419,8 +1413,8 @@ export default function SuperadminPage() {
                                     msg.senderRole === "superadmin"
                                       ? { backgroundColor: "rgba(239, 68, 68, 0.15)", color: "#ef4444", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
                                       : msg.senderRole === "admin"
-                                      ? { backgroundColor: "rgba(59, 130, 246, 0.15)", color: "#3b82f6", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
-                                      : { backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
+                                        ? { backgroundColor: "rgba(59, 130, 246, 0.15)", color: "#3b82f6", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
+                                        : { backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700 }
                                   }
                                 >
                                   {(msg.senderRole || "USER").toUpperCase()}
