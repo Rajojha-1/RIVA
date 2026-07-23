@@ -217,7 +217,10 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid #222d34;
-  z-index: 5;
+  z-index: 15;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
 }
 
 .chatHeaderLeft {
@@ -466,6 +469,7 @@
   align-items: center;
   gap: 12px;
   border-top: 1px solid #222d34;
+  flex-shrink: 0;
 }
 
 .inputField {
